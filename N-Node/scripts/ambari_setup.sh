@@ -16,7 +16,7 @@ UTILS_version="1.1.0.22"
 ## Cluster Info
 CLUSTER_NAME="TestCluster"
 ambari_login="admin"
-ambari_password="somepassword"
+ambari_password="admin"
 ##
 ## Functions
 ##
@@ -226,21 +226,21 @@ hdp_build_config () {
 hdp_register_cluster () { 
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
 }
 
 ## Register HDP and Utils Repos
 hdp_register_repo () {
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
-	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
 }
 
 ## Build the Cluster 
 hdp_cluster_build () {
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
 }
 
 ##

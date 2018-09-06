@@ -20,7 +20,7 @@ Note that it is also highly suggested to add dependencies for Block Volume attac
 
 ## Password & User Details
 
-Modify the scripts/ambari_setup.sh and update the Ambari login and password information at the top.  This is also where you can customize the HDP & Ambari versions used, along with the Cluster Name.
+Modify the scripts/Ambari_setup.sh - This is also where you can customize the HDP & Ambari versions used, along with the Cluster Name.  Default ambari login is "admin/admin" - Change this after logging into Ambari for the first time.
 
 ## Deployment
 
