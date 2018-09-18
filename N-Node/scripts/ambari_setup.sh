@@ -16,7 +16,7 @@ UTILS_version="1.1.0.22"
 ## Cluster Info
 CLUSTER_NAME="TestCluster"
 ambari_login="admin"
-ambari_password="admin"
+ambari_password="somepassword"
 ##
 ## Functions
 ##
@@ -28,6 +28,11 @@ ambari-server setup -s
 service ambari-server start
 wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
+}
+
+mysql_connector_install () { 
+    yum install mysql-connector-java* -y
+    ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar
 }
 
 ## Detect and generate DFS config for HDFS
@@ -80,6 +85,136 @@ create_cluster_config () {
 cat << EOF
 { 
 	"configurations": [
+		{ "ams-env" : { 
+			"properties": { 
+				"ambari_metrics_user" : "ams",
+				"metrics_collector_heapsize" : "512m",
+				"metrics_collector_log_dir" : "/var/log/ambari-metrics-collector",
+				"metrics_collector_pid_dir" : "/var/run/ambari-metrics-collector",
+				"metrics_monitor_log_dir" : "/var/log/ambari-metrics-monitor",
+				"metrics_monitor_pid_dir" : "/var/run/ambari-metrics-monitor"
+		      }}
+		},
+		{ "ams-hbase-env" : {
+			"properties" : {
+			        "hbase_log_dir" : "/var/log/ambari-metrics-collector",
+			        "hbase_master_heapsize" : "1024m",
+			        "hbase_master_maxperm_size" : "128m",
+			        "hbase_master_xmn_size" : "128m",
+			        "hbase_pid_dir" : "/var/run/ambari-metrics-collector/",
+			        "hbase_regionserver_heapsize" : "1024m",
+			        "hbase_regionserver_xmn_max" : "512m",
+			        "hbase_regionserver_xmn_ratio" : "0.2",
+			        "regionserver_xmn_size" : "256m"
+			}}
+		},
+		{ "ams-hbase-log4j" : {
+			"properties" : {
+			}}
+		},
+		{ "ams-hbase-policy" : {
+			"properties" : {
+ 			        "security.admin.protocol.acl" : "*",
+  			        "security.client.protocol.acl" : "*",
+				"security.masterregion.protocol.acl" : "*"
+			}}
+		},
+		{ "ams-hbase-security-site" : {
+			"properties" : {
+			        "ams.zookeeper.keytab" : "",
+			        "ams.zookeeper.principal" : "",
+			        "hadoop.security.authentication" : "",
+			        "hbase.coprocessor.master.classes" : "",
+			        "hbase.coprocessor.region.classes" : "",
+			        "hbase.master.kerberos.principal" : "",
+			        "hbase.master.keytab.file" : "",
+  			        "hbase.myclient.keytab" : "",
+			        "hbase.myclient.principal" : "",
+			        "hbase.regionserver.kerberos.principal" : "",
+			        "hbase.regionserver.keytab.file" : "",
+			        "hbase.security.authentication" : "",
+			        "hbase.security.authorization" : "",
+			        "hbase.zookeeper.property.authProvider.1" : "",
+			        "hbase.zookeeper.property.jaasLoginRenew" : "",
+			        "hbase.zookeeper.property.kerberos.removeHostFromPrincipal" : "",
+			        "hbase.zookeeper.property.kerberos.removeRealmFromPrincipal" : "",
+			        "zookeeper.znode.parent" : ""
+			}}
+		},		
+		{ "ams-hbase-site" : {
+			"properties" : {
+			        "hbase.client.scanner.caching" : "10000",
+			        "hbase.client.scanner.timeout.period" : "900000",
+			        "hbase.cluster.distributed" : "false",
+			        "hbase.hregion.majorcompaction" : "0",
+				"hbase.hregion.memstore.block.multiplier" : "4",
+				"hbase.hregion.memstore.flush.size" : "134217728",
+				"hbase.hstore.blockingStoreFiles" : "200",
+				"hbase.hstore.flusher.count" : "2",
+				"hbase.local.dir" : "\${hbase.tmp.dir}/local",
+				"hbase.master.info.bindAddress" : "0.0.0.0",
+				"hbase.master.info.port" : "61310",
+				"hbase.master.port" : "61300",
+				"hbase.master.wait.on.regionservers.mintostart" : "1",
+				"hbase.regionserver.global.memstore.lowerLimit" : "0.3",
+				"hbase.regionserver.global.memstore.upperLimit" : "0.35",
+				"hbase.regionserver.info.port" : "61330",
+				"hbase.regionserver.port" : "61320",
+				"hbase.regionserver.thread.compaction.large" : "2",
+				"hbase.regionserver.thread.compaction.small" : "3",
+				"hbase.replication" : "false",
+				"hbase.rootdir" : "file:///var/lib/ambari-metrics-collector/hbase",
+				"hbase.snapshot.enabled" : "false",
+				"hbase.tmp.dir" : "/var/lib/ambari-metrics-collector/hbase-tmp",
+				"hbase.zookeeper.leaderport" : "61388",
+				"hbase.zookeeper.peerport" : "61288",
+				"hbase.zookeeper.property.clientPort" : "61181",
+				"hbase.zookeeper.property.dataDir" : "\${hbase.tmp.dir}/zookeeper",
+				"hbase.zookeeper.quorum" : "{{zookeeper_quorum_hosts}}",
+				"hfile.block.cache.size" : "0.3",
+				"phoenix.groupby.maxCacheSize" : "307200000",
+				"phoenix.query.maxGlobalMemoryPercentage" : "15",
+				"phoenix.query.spoolThresholdBytes" : "12582912",
+				"phoenix.query.timeoutMs" : "1200000",
+				"phoenix.sequence.saltBuckets" : "2",
+				"phoenix.spool.directory" : "\${hbase.tmp.dir}/phoenix-spool",
+				"zookeeper.session.timeout" : "120000",
+				"zookeeper.session.timeout.localHBaseCluster" : "20000"
+			}}
+    		},
+		{ "ams-site" : {
+			"properties" : {
+				"phoenix.query.maxGlobalMemoryPercentage" : "25",
+				"phoenix.spool.directory" : "/tmp",
+				"timeline.metrics.aggregator.checkpoint.dir" : "/var/lib/ambari-metrics-collector/checkpoint",
+				"timeline.metrics.cluster.aggregator.hourly.checkpointCutOffMultiplier" : "2",
+				"timeline.metrics.cluster.aggregator.hourly.disabled" : "false",
+				"timeline.metrics.cluster.aggregator.hourly.interval" : "3600",
+				"timeline.metrics.cluster.aggregator.hourly.ttl" : "31536000",
+				"timeline.metrics.cluster.aggregator.minute.checkpointCutOffMultiplier" : "2",
+				"timeline.metrics.cluster.aggregator.minute.disabled" : "false",
+				"timeline.metrics.cluster.aggregator.minute.interval" : "120",
+				"timeline.metrics.cluster.aggregator.minute.timeslice.interval" : "15",
+				"timeline.metrics.cluster.aggregator.minute.ttl" : "2592000",
+				"timeline.metrics.hbase.compression.scheme" : "SNAPPY",
+				"timeline.metrics.hbase.data.block.encoding" : "FAST_DIFF",
+				"timeline.metrics.host.aggregator.hourly.checkpointCutOffMultiplier" : "2",
+				"timeline.metrics.host.aggregator.hourly.disabled" : "false",
+				"timeline.metrics.host.aggregator.hourly.interval" : "3600",
+				"timeline.metrics.host.aggregator.hourly.ttl" : "2592000",
+				"timeline.metrics.host.aggregator.minute.checkpointCutOffMultiplier" : "2",
+				"timeline.metrics.host.aggregator.minute.disabled" : "false",
+				"timeline.metrics.host.aggregator.minute.interval" : "120",
+				"timeline.metrics.host.aggregator.minute.ttl" : "604800",
+				"timeline.metrics.host.aggregator.ttl" : "86400",
+				"timeline.metrics.service.checkpointDelay" : "60",
+				"timeline.metrics.service.default.result.limit" : "5760",
+				"timeline.metrics.service.operation.mode" : "embedded",
+				"timeline.metrics.service.resultset.fetchSize" : "2000",
+				"timeline.metrics.service.rpc.address" : "0.0.0.0:60200",
+				"timeline.metrics.service.webapp.address" : "0.0.0.0:6188"
+        		}}
+		},
 		{ "core-site": { 
 			"properties": { 
 				"fs.defaultFS": "hdfs://${CLUSTER_NAME}",
@@ -140,7 +275,10 @@ cat << EOF
                                 { "name": "HDFS_CLIENT" }, 
                                 { "name": "YARN_CLIENT" }, 
                                 { "name": "MAPREDUCE2_CLIENT" }, 
-                                { "name": "ZOOKEEPER_CLIENT" }],
+                                { "name": "ZOOKEEPER_CLIENT" },
+				{ "name": "SPARK_JOBHISTORYSERVER" },
+				{ "name": "KNOX_GATEWAY" },
+				{ "name": "FALCON_SERVER" }],
                         "cardinality": 1 }, 
                         {"name": "bastion", 
                         "components": [
@@ -148,7 +286,15 @@ cat << EOF
                                 { "name": "HDFS_CLIENT" }, 
                                 { "name": "YARN_CLIENT" }, 
                                 { "name": "MAPREDUCE2_CLIENT" }, 
-                                { "name": "ZOOKEEPER_CLIENT" }],
+                                { "name": "ZOOKEEPER_CLIENT" },
+				{ "name": "OOZIE_CLIENT" },
+				{ "name": "SPARK_CLIENT" },
+				{ "name": "HBASE_CLIENT" },
+				{ "name": "FALCON_CLIENT" },
+				{ "name": "TEZ_CLIENT" },
+				{ "name": "SQOOP" },
+				{ "name": "HCAT" },
+				{ "name": "PIG" }],
                         "cardinality": 1 },
 			{"name": "master1", 
 			"components": [
@@ -157,6 +303,7 @@ cat << EOF
 				{ "name": "ZKFC" },
 				{ "name": "JOURNALNODE" },
 				{ "name": "RESOURCEMANAGER" }, 
+				{ "name": "OOZIE_SERVER" },
                                 { "name": "METRICS_MONITOR" }],				
 			"cardinality": 1 }, 
 			{ "name": "master2", 
@@ -168,22 +315,35 @@ cat << EOF
                                 { "name": "METRICS_MONITOR" }, 
                                 { "name": "RESOURCEMANAGER" }, 
                                 { "name": "APP_TIMELINE_SERVER" }, 
-                                { "name": "HISTORYSERVER" }], 
+                                { "name": "HISTORYSERVER" },
+				{ "name": "HBASE_MASTER" },
+				{ "name": "HIVE_METASTORE" },
+				{ "name": "HIVE_SERVER" },
+				{ "name": "MYSQL_SERVER" },
+				{ "name": "PIG" },
+				{ "name": "TEZ_CLIENT" },
+				{ "name": "HDFS_CLIENT" },
+				{ "name": "YARN_CLIENT" },
+				{ "name": "MAPREDUCE2_CLIENT" },
+				{ "name": "ZOOKEEPER_CLIENT" },
+				{ "name": "WEBHCAT_SERVER" }], 
 			"cardinality": 1 }, 
 			{ "name": "datanode", 
 			"components": [
 				{ "name": "NODEMANAGER" }, 
                                 { "name": "METRICS_MONITOR" },
-				{ "name": "DATANODE" }]
+				{ "name": "DATANODE" },
+				{ "name": "HBASE_REGIONSERVER" },
+				{ "name": "ZOOKEEPER_CLIENT"}]
 			}
 			], 
-			"Blueprints": { 
-				"blueprint_name": "${CLUSTER_NAME}", 
-				"stack_name": "HDP", 
-				"stack_version": "2.6", 
-				"security": { "type": "NONE" } 
-				} 
+		"Blueprints": { 
+			"blueprint_name": "${CLUSTER_NAME}", 
+			"stack_name": "HDP", 
+			"stack_version": "2.6", 
+			"security": { "type": "NONE" } 
 			} 
+		} 
 EOF
 }
 
@@ -226,21 +386,21 @@ hdp_build_config () {
 hdp_register_cluster () { 
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
 }
 
 ## Register HDP and Utils Repos
 hdp_register_repo () {
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -H "X-Requested-By: ambari" -X PUT -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
-	curl -i -H "X-Requested-By: ambari" -X PUT -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
 }
 
 ## Build the Cluster 
 hdp_cluster_build () {
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u ${ambari_login}:${ambari_password} http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
 }
 
 ##
@@ -254,6 +414,7 @@ ambari_install
 hdp_build_config
 hdp_register_cluster
 hdp_register_repo
+mysql_connector_install
 hdp_cluster_build
 echo -e "----------------------------------"
 echo -e "-------- Cluster Building --------"
