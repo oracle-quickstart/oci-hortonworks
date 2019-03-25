@@ -1,7 +1,7 @@
 resource "null_resource" "cdh-setup" {
     depends_on = ["oci_core_instance.UtilityNode","oci_core_instance.MasterNode","oci_core_instance.Bastion"]
     provisioner "file" {
-      source = "scripts/"
+      source = "../scripts/"
       destination = "/home/opc/"
       connection {
         agent = false

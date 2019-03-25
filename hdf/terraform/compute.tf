@@ -15,7 +15,7 @@ resource "oci_core_instance" "UtilityNode" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data = "${base64encode(file("scripts/boot.sh"))}"
+    user_data = "${base64encode(file("../scripts/boot.sh"))}"
   }
 
   timeouts {
@@ -40,7 +40,7 @@ resource "oci_core_instance" "MasterNode" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data = "${base64encode(file("scripts/boot.sh"))}"
+    user_data = "${base64encode(file("../scripts/boot.sh"))}"
   }
 
   timeouts {
@@ -70,7 +70,7 @@ resource "oci_core_instance" "Bastion" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data = "${base64encode(file("scripts/bastion_boot.sh"))}"
+    user_data = "${base64encode(file("../scripts/bastion_boot.sh"))}"
   }
 
   timeouts {

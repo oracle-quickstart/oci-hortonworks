@@ -1,7 +1,7 @@
 resource "null_resource" "cdh-setup" {
     depends_on = ["oci_core_instance.UtilityNode","oci_core_instance.MasterNode","oci_core_instance.WorkerNode","oci_core_instance.Bastion"]
     provisioner "file" {
-      source = "scripts/iscsi.sh"
+      source = "../scripts/iscsi.sh"
       destination = "/home/opc/iscsi.sh"
       connection {
         agent = false
@@ -12,7 +12,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/bastion.sh"
+      source = "../scripts/bastion.sh"
       destination = "/home/opc/bastion.sh"
       connection {
         agent = false
@@ -23,7 +23,7 @@ resource "null_resource" "cdh-setup" {
     } 
     }
     provisioner "file" {
-      source = "scripts/start.sh"
+      source = "../scripts/start.sh"
       destination = "/home/opc/start.sh"
       connection {
         agent = false
@@ -34,7 +34,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/node_prep.sh"
+      source = "../scripts/node_prep.sh"
       destination = "/home/opc/node_prep.sh"
       connection {
         agent = false
@@ -56,7 +56,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/tune.sh"
+      source = "../scripts/tune.sh"
       destination = "/home/opc/tune.sh"
       connection {
         agent = false
@@ -67,7 +67,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/disk_setup.sh"
+      source = "../scripts/disk_setup.sh"
       destination = "/home/opc/disk_setup.sh"
       connection {
         agent = false
@@ -78,7 +78,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/ambari_setup.sh"
+      source = "../scripts/ambari_setup.sh"
       destination = "/home/opc/ambari_setup.sh"
       connection {
         agent = false
@@ -89,7 +89,7 @@ resource "null_resource" "cdh-setup" {
     }
     }
     provisioner "file" {
-      source = "scripts/ambari_agent.sh"
+      source = "../scripts/ambari_agent.sh"
       destination = "/home/opc/ambari_agent.sh"
       connection {
         agent = false
