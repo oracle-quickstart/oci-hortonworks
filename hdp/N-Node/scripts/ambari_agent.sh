@@ -1,5 +1,6 @@
 #!/bin/bash
-## Ambari Agent Install
+
+# Ambari Agent Install
 ambari_version="2.6.2.0"
 utilfqdn=`nslookup hw-utility-1 | grep Name | gawk '{print $2}'`
 hostname=`hostname`
@@ -12,5 +13,3 @@ wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/h
 # Modify /etc/ambari-agent/conf/ambari-agent.ini
 sed -i "s/localhost/${utilfqdn}/g" /etc/ambari-agent/conf/ambari-agent.ini
 service ambari-agent start
-
-

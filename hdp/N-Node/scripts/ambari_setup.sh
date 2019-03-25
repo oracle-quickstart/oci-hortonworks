@@ -1,7 +1,7 @@
 #!/bin/bash
-## Ambari Setup Script
+# Ambari Setup Script
 
-## Set some global variables first
+# Set some global variables first
 #utilfqdn=`nslookup hw-master3-1 | grep Name | gawk '{print $2}'`
 utilfqdn="hw-utility-1.public1.hwvcn.oraclevcn.com"
 #master1fqdn=`nslookup hw-master-1 | grep Name | gawk '{print $2}'`
@@ -21,7 +21,7 @@ ambari_password="somepassword"
 ## Functions
 ##
 
-ambari_install () { 
+ambari_install () {
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-server -y
 ambari-server setup -s
@@ -30,18 +30,18 @@ wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hd
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 }
 
-mysql_connector_install () { 
+mysql_connector_install () {
     yum install mysql-connector-java* -y
     ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar
 }
 
 ## Detect and generate DFS config for HDFS
-create_hdfs_config () { 
+create_hdfs_config () {
 dc=0
-while [ $dc -lt $hdfsdisks ]; do 
+while [ $dc -lt $hdfsdisks ]; do
 	if [ $dc = 0 ]; then
 		dfs=`echo "\"/data${dc}/"`
-	elif [ $dc = $((hdfsdisks-1)) ]; then 
+	elif [ $dc = $((hdfsdisks-1)) ]; then
 		dfs=`echo "$dfs,/data${dc}/\""`
 	else
 	 	dfs=`echo "$dfs,/data${dc}/"`
@@ -52,7 +52,7 @@ done;
 
 ## Create Cluster hostmap.json
 create_dynamic_hostmap () {
-cat << EOF   
+cat << EOF
 {
         "blueprint": "${CLUSTER_NAME}",
         "default_password": "hadoop",
@@ -76,17 +76,17 @@ cat << EOF
         "Clusters": {
             "cluster_name": "${CLUSTER_NAME}"
         }
-    } 
+    }
 EOF
 }
 
 ## Create Cluster configuration cluster_config.json
 create_cluster_config () {
 cat << EOF
-{ 
+{
 	"configurations": [
-		{ "ams-env" : { 
-			"properties": { 
+		{ "ams-env" : {
+			"properties": {
 				"ambari_metrics_user" : "ams",
 				"metrics_collector_heapsize" : "512m",
 				"metrics_collector_log_dir" : "/var/log/ambari-metrics-collector",
@@ -140,7 +140,7 @@ cat << EOF
 			        "hbase.zookeeper.property.kerberos.removeRealmFromPrincipal" : "",
 			        "zookeeper.znode.parent" : ""
 			}}
-		},		
+		},
 		{ "ams-hbase-site" : {
 			"properties" : {
 			        "hbase.client.scanner.caching" : "10000",
@@ -215,8 +215,8 @@ cat << EOF
 				"timeline.metrics.service.webapp.address" : "0.0.0.0:6188"
         		}}
 		},
-		{ "core-site": { 
-			"properties": { 
+		{ "core-site": {
+			"properties": {
 				"fs.defaultFS": "hdfs://${CLUSTER_NAME}",
 				"ha.zookeeper.quorum" : "%HOSTGROUP::master1%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master2%:2181"
 		    	}}
@@ -265,27 +265,27 @@ cat << EOF
 			        "yarn.timeline-service.webapp.address" : "%HOSTGROUP::master2%:8188",
 			        "yarn.timeline-service.webapp.https.address" : "%HOSTGROUP::master2%:8190"
 				}}
-		}], 
+		}],
 		"host_groups": [
-                        {"name": "master3", 
+                        {"name": "master3",
                         "components": [
                                 { "name": "ZOOKEEPER_SERVER" },
 			        { "name": "METRICS_COLLECTOR" },
 			        { "name": "METRICS_MONITOR" },
-                                { "name": "HDFS_CLIENT" }, 
-                                { "name": "YARN_CLIENT" }, 
-                                { "name": "MAPREDUCE2_CLIENT" }, 
+                                { "name": "HDFS_CLIENT" },
+                                { "name": "YARN_CLIENT" },
+                                { "name": "MAPREDUCE2_CLIENT" },
                                 { "name": "ZOOKEEPER_CLIENT" },
 				{ "name": "SPARK_JOBHISTORYSERVER" },
 				{ "name": "KNOX_GATEWAY" },
 				{ "name": "FALCON_SERVER" }],
-                        "cardinality": 1 }, 
-                        {"name": "bastion", 
+                        "cardinality": 1 },
+                        {"name": "bastion",
                         "components": [
                                 { "name": "METRICS_MONITOR" },
-                                { "name": "HDFS_CLIENT" }, 
-                                { "name": "YARN_CLIENT" }, 
-                                { "name": "MAPREDUCE2_CLIENT" }, 
+                                { "name": "HDFS_CLIENT" },
+                                { "name": "YARN_CLIENT" },
+                                { "name": "MAPREDUCE2_CLIENT" },
                                 { "name": "ZOOKEEPER_CLIENT" },
 				{ "name": "OOZIE_CLIENT" },
 				{ "name": "SPARK_CLIENT" },
@@ -296,25 +296,25 @@ cat << EOF
 				{ "name": "HCAT" },
 				{ "name": "PIG" }],
                         "cardinality": 1 },
-			{"name": "master1", 
+			{"name": "master1",
 			"components": [
 				{ "name": "ZOOKEEPER_SERVER" },
-				{ "name": "NAMENODE" }, 
+				{ "name": "NAMENODE" },
 				{ "name": "ZKFC" },
 				{ "name": "JOURNALNODE" },
-				{ "name": "RESOURCEMANAGER" }, 
+				{ "name": "RESOURCEMANAGER" },
 				{ "name": "OOZIE_SERVER" },
-                                { "name": "METRICS_MONITOR" }],				
-			"cardinality": 1 }, 
-			{ "name": "master2", 
+                                { "name": "METRICS_MONITOR" }],
+			"cardinality": 1 },
+			{ "name": "master2",
 			"components": [
 				{ "name": "ZOOKEEPER_SERVER" },
 				{ "name": "NAMENODE" },
 				{ "name": "ZKFC" },
                                 { "name": "JOURNALNODE" },
-                                { "name": "METRICS_MONITOR" }, 
-                                { "name": "RESOURCEMANAGER" }, 
-                                { "name": "APP_TIMELINE_SERVER" }, 
+                                { "name": "METRICS_MONITOR" },
+                                { "name": "RESOURCEMANAGER" },
+                                { "name": "APP_TIMELINE_SERVER" },
                                 { "name": "HISTORYSERVER" },
 				{ "name": "HBASE_MASTER" },
 				{ "name": "HIVE_METASTORE" },
@@ -326,24 +326,24 @@ cat << EOF
 				{ "name": "YARN_CLIENT" },
 				{ "name": "MAPREDUCE2_CLIENT" },
 				{ "name": "ZOOKEEPER_CLIENT" },
-				{ "name": "WEBHCAT_SERVER" }], 
-			"cardinality": 1 }, 
-			{ "name": "datanode", 
+				{ "name": "WEBHCAT_SERVER" }],
+			"cardinality": 1 },
+			{ "name": "datanode",
 			"components": [
-				{ "name": "NODEMANAGER" }, 
+				{ "name": "NODEMANAGER" },
                                 { "name": "METRICS_MONITOR" },
 				{ "name": "DATANODE" },
 				{ "name": "HBASE_REGIONSERVER" },
 				{ "name": "ZOOKEEPER_CLIENT"}]
 			}
-			], 
-		"Blueprints": { 
-			"blueprint_name": "${CLUSTER_NAME}", 
-			"stack_name": "HDP", 
-			"stack_version": "2.6", 
-			"security": { "type": "NONE" } 
-			} 
-		} 
+			],
+		"Blueprints": {
+			"blueprint_name": "${CLUSTER_NAME}",
+			"stack_name": "HDP",
+			"stack_version": "2.6",
+			"security": { "type": "NONE" }
+			}
+		}
 EOF
 }
 
@@ -361,8 +361,8 @@ EOF
 }
 
 ## Set Utils Repo
-hdp_utils_repo () { 
-cat << EOF 
+hdp_utils_repo () {
+cat << EOF
     {
     "Repositories" : {
        "repo_name" : "HDP Utils Public Repo",
@@ -374,7 +374,7 @@ EOF
 }
 
 ## Config Execution wrapper
-hdp_build_config () { 
+hdp_build_config () {
 	create_hdfs_config
 	create_cluster_config > cluster_config.json
 	create_dynamic_hostmap > hostmap.json
@@ -383,7 +383,7 @@ hdp_build_config () {
 }
 
 ## Submit Cluster Configuration Blueprint
-hdp_register_cluster () { 
+hdp_register_cluster () {
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
 	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
@@ -397,7 +397,7 @@ hdp_register_repo () {
 	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
 }
 
-## Build the Cluster 
+## Build the Cluster
 hdp_cluster_build () {
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
 	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
