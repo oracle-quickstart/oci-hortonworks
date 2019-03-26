@@ -6,16 +6,16 @@ Included here is a Terraform template for deploying a fully configured HDP clust
 | Recommended | BM.DenseIO2.52 | VM.Standard2.4   | VM.Standard2.16              |
 | Minimum     | VM.Standard2.8 | VM.Standard2.1   | VM.Standard2.8               |
 
-Host types can be customized in the env-vars file referenced below.   Also included with this template is an easy method to customize block volume quantity and size as pertains to HDFS capacity.   See "variables.tf" for more information in-line.
+Host types can be customized in this template.   Also included with this template is an easy method to customize block volume quantity and size as pertains to HDFS capacity.   See "variables.tf" for more information in-line.
 
 ## Prerequisites
 First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oci-quickstart/oci-prerequisites).
 
 ## Scaling
 
-Modify the env-vars file prior to deployment and modify the number of workers to scale your cluster dynamically.
+Modify the "variables.tf" file prior to deployment and set the number of workers to scale your cluster dynamically.
 
-	export TF_VAR_nodecount="5"
+	variable "nodecount" { default = "5" }
 
 The above deploys a 5 worker cluster.
 
@@ -35,7 +35,6 @@ Modify the scripts/Ambari_setup.sh - This is also where you can customize the HD
 
 Deploy using standard Terraform commands
 
-	source env-vars
 	terraform init
 	terraform plan
 	terraform apply
