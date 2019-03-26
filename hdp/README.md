@@ -1,28 +1,23 @@
 # Hortonworks HDP on OCI automation with Terraform
 Included here is a Terraform template for deploying a fully configured HDP cluster on OCI..
 
-## N-Node
-This is an N-Node template allowing for dynamic number of Worker Nodes to be deployed with HDP.
+|             | Worker Nodes   | Bastion Instance | Utility and Master Instances |
+|-------------|----------------|------------------|------------------------------|
+| Recommended | BM.DenseIO2.52 | VM.Standard2.4   | VM.Standard2.16              |
+| Minimum     | VM.Standard2.8 | VM.Standard2.1   | VM.Standard2.8               |
 
-## How to use this template
-In addition to an active tenancy on OCI, you will need a functional installation of Terraform, and an API key for a privileged user in the tenancy.  See these documentation links for more information:
+Host types can be customized in the env-vars file referenced below.   Also included with this template is an easy method to customize block volume quantity and size as pertains to HDFS capacity.   See "variables.tf" for more information in-line.
 
-* [Getting Started with Terraform on OCI](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/terraformgetstarted.htm)
-* [How to Generate an API Signing Key](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm#How)
-
-Once the pre-requisites are in place, you will need to copy the template from this repository to where you have Terraform installed.  Refer to the README.md for the template for additional deployment instructions.
-
-# Usage Guide
-
-## PREREQUISITES
-
-Installation has a dependency on Terraform being installed and configured for the user tenancy.   As such an "env-vars" file is included with this package that contains all the necessary environment variables.  This file should be updated with the appropriate values prior to installation.  To source this file prior to installation, either reference it in your .rc file for your shell's or run the following:
-
-        source env-vars
+## Prerequisites
+First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oci-quickstart/oci-prerequisites).
 
 ## Scaling
 
 Modify the env-vars file prior to deployment and modify the number of workers to scale your cluster dynamically.
+
+	export TF_VAR_nodecount="5"
+
+The above deploys a 5 worker cluster.
 
 ## Block Volumes
 
@@ -40,7 +35,10 @@ Modify the scripts/Ambari_setup.sh - This is also where you can customize the HD
 
 Deploy using standard Terraform commands
 
-        terraform init && terraform plan && terraform apply
+	source env-vars
+	terraform init
+	terraform plan
+	terraform apply
 
 ## Post Deployment
 
