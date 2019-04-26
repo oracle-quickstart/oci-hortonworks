@@ -8,14 +8,14 @@ log() {
   echo "$(date) [${EXECNAME}]: $*" >> "${LOG_FILE}"
 }
 
-EXECNAME="Ambari Agent"
+EXECNAME="Ambari"
 log "->Install"
-
 # Ambari Agent Install
 ambari_version="2.6.2.0"
-
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
-yum install ambari-agent -y
+yum install ambari-server ambari-agent -y
+ambari-server setup -s
+service ambari-server start
 wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 

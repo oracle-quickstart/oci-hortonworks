@@ -1,57 +1,220 @@
 #!/bin/bash
 # Ambari Setup Script
 
+## Util FQDN is the Public IP of the Ambari host
+utilfqdn=$1
+## AD is needed to set proper subnet for host topology
+ad=$2
+# Worker Shape - used for tuning
+worker_shape=$3
+# Number of Block Volume HDFS Disks
+block_disks=$4
+# Number of Workers
+wc=$5
+
+
+if [ -z $5 ]; then
+	echo "Usage:\n"
+	echo "./hdp_install.sh <ambari_public_ip> <availability_domain> <worker_shape> <block_volume_hdfs_disk_count> <worker_count>"
+	exit
+fi
+
+case $worker_shape in
+	BM.Standard.E2.64)
+	wprocs=64
+        hdfs_disks=${block_disks}
+        data_tiering="false"
+	;;
+
+	BM.DenseIO2.52)
+	wprocs=52
+	nvme_disks=8
+	hdfs_disks=$((${nvme_disks}+${block_disks}))
+	data_tiering="true"
+	;;
+
+	BM.Standard2.52|BM.GPU3.8)
+	wprocs=52
+	hdfs_disks=${block_disks}
+	data_tiering="false"
+	;;
+
+	BM.HPC2.36)
+	wprocs=36
+	nvme_disks=1
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+	data_tiering="true"
+	;;
+
+	BM.DenseIO1.36)
+	wprocs=36
+	hdfs_disks=$((9+${block_disks}))
+	data_tiering="true"
+	;;
+
+	BM.Standard1.36)
+	wprocs=36
+	hdfs_disks=${block_disks}
+	data_tiering="false"
+	;;
+
+	BM.GPU2.2)
+	wprocs=28
+        hdfs_disks=${block_disks}
+        data_tiering="false"
+        ;;
+
+        VM.DenseIO2.24)
+	wprocs=24
+	nvme_disks=4
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+	data_tiering="true"
+	;;
+
+	VM.Standard2.24|VM.GPU3.4)
+        wprocs=24
+        hdfs_disks=${block_disks}
+        data_tiering="false"
+        ;;
+
+	VM.DenseIO2.16)
+	wprocs=16
+	nvme_disks=2
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+	data_tiering="true"
+	;;
+
+	VM.DenseIO1.16)
+	wprocs=16
+	nvme_disks=4
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+        data_tiering="true"
+        ;;
+
+	VM.Standard2.16|VM.Standard1.16)
+	wprocs=16
+        hdfs_disks=${block_disks}
+        data_tiering="false"
+	;;
+
+	VM.GPU2.1|VM.GPU3.2)
+	wprocs=12
+	hdfs_disks=${block_disks}
+	data_tiering="false"
+	;;
+
+	VM.DenseIO2.8)
+	wprocs=8
+	nvme_disks=1
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+	data_tiering="true"
+	;;
+
+	VM.DenseIO1.8)
+	wprocs=8
+	nvme_disks=2
+        hdfs_disks=$((${nvme_disks}+${block_disks}))
+        data_tiering="true"
+        ;;	
+
+	VM.Standard2.8|VM.Standard1.8|VM.StandardE2.8)
+	wprocs=8
+        hdfs_disks=${block_disks}
+        data_tiering="false"
+	;;
+
+	VM.GPU3.1)
+	wprocs=6
+	hdfs_disks=${block_disks}
+	data_tiering="false"
+	;;
+
+	*)
+	echo "Unsupported Worker Shape ${worker_shape} - validate this is a supported OCI shape for use as a Worker Node."
+	exit
+	;;
+
+esac	
+	
+
+	
 # Set some global variables first
-#utilfqdn=`nslookup hw-master3-1 | grep Name | gawk '{print $2}'`
-utilfqdn="hw-utility-1.public1.hwvcn.oraclevcn.com"
-#master1fqdn=`nslookup hw-master-1 | grep Name | gawk '{print $2}'`
-master1fqdn="hw-master-1.private1.hwvcn.oraclevcn.com"
-#master2fqdn=`nslookup hw-master-2 | grep Name | gawk '{print $2}'`
-master2fqdn="hw-master-2.private2.hwvcn.oraclevcn.com"
-bastionfqdn="hw-bastion1.bastion1.hwvcn.oraclevcn.com"
-## Ambari and HDP Version
+
+## Ambari and HDP Version - Modify these to install specific version
 ambari_version="2.6.2.0"
 HDP_version="2.6.5.0"
 UTILS_version="1.1.0.22"
-## Cluster Info
+
+## Cluster Info 
 CLUSTER_NAME="TestCluster"
-ambari_login="admin"
+# Set a new admin account
+ambari_login="hdpadmin"
 ambari_password="somepassword"
+
+# Host Mapping needed for cluster config
+master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
+master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
+bastionfqdn="hw-bastion1.bastion${ad}.hwvcn.oraclevcn.com"
+
 ##
 ## Functions
 ##
 
-ambari_install () {
-wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
-yum install ambari-server -y
-ambari-server setup -s
-service ambari-server start
-wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
-wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
+create_random_password(){
+  perl -le 'print map { ("a".."z", "A".."Z", 0..9)[rand 62] } 1..10'
 }
 
-mysql_connector_install () {
-    yum install mysql-connector-java* -y
-    ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar
+admin_password_json(){
+cat << EOF
+{
+	"Users/user_name": "admin",
+	"Users/password": "${admin_password}",
+	"Users/active": "false"
+	}
+EOF
+}
+
+new_admin(){
+cat << EOF
+{
+	"Users/user_name": "${ambari_login}",
+	"Users/password": "${ambari_password}",
+	"Users/active": "true",
+	"Users/admin": "true"
+	}
+EOF
 }
 
 ## Detect and generate DFS config for HDFS
-create_hdfs_config () {
+create_hdfs_config(){
 dc=0
-while [ $dc -lt $hdfsdisks ]; do
-	if [ $dc = 0 ]; then
-		dfs=`echo "\"/data${dc}/"`
-	elif [ $dc = $((hdfsdisks-1)) ]; then
-		dfs=`echo "$dfs,/data${dc}/\""`
-	else
-	 	dfs=`echo "$dfs,/data${dc}/"`
+while [ $dc -lt $hdfs_disks ]; do
+	if [ $data_tiering = "false" ]; then 
+		if [ $dc = 0 ]; then
+			dfs=`echo "\"/data${dc}/"`
+		elif [ $dc = $((hdfs_disks-1)) ]; then
+			dfs=`echo "$dfs,/data${dc}/\""`
+		else
+		 	dfs=`echo "$dfs,/data${dc}/"`
+		fi
+		dc=$((dc+1))
+	elif [ $data_tiering = "true" ]; then 
+                if [ $dc = 0 ]; then
+                        dfs=`echo "\"[DISK]/data${dc}/"`
+		elif [ $dc -lt $nvme_disks ]; then
+			dfs=`echo "$dfs,[DISK]/data${dc}/"`
+                elif [ $dc = $((hdfs_disks-1)) ]; then
+                        dfs=`echo "$dfs,[ARCHIVE]/data${dc}/\""`
+                else
+                        dfs=`echo "$dfs,[ARCHIVE]/data${dc}/"`
+                fi
+                dc=$((dc+1))
 	fi
-	dc=$((dc+1))
 done;
 }
 
 ## Create Cluster hostmap.json
-create_dynamic_hostmap () {
+create_dynamic_hostmap(){
 cat << EOF
 {
         "blueprint": "${CLUSTER_NAME}",
@@ -81,7 +244,7 @@ EOF
 }
 
 ## Create Cluster configuration cluster_config.json
-create_cluster_config () {
+create_cluster_config(){
 cat << EOF
 {
 	"configurations": [
@@ -348,7 +511,7 @@ EOF
 }
 
 ## Set HDP Repo
-hdp_repo () {
+hdp_repo(){
 cat << EOF
     {
     "Repositories" : {
@@ -361,7 +524,7 @@ EOF
 }
 
 ## Set Utils Repo
-hdp_utils_repo () {
+hdp_utils_repo(){
 cat << EOF
     {
     "Repositories" : {
@@ -374,7 +537,7 @@ EOF
 }
 
 ## Config Execution wrapper
-hdp_build_config () {
+hdp_build_config(){
 	create_hdfs_config
 	create_cluster_config > cluster_config.json
 	create_dynamic_hostmap > hostmap.json
@@ -383,14 +546,14 @@ hdp_build_config () {
 }
 
 ## Submit Cluster Configuration Blueprint
-hdp_register_cluster () {
+hdp_register_cluster(){
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
 	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
 }
 
 ## Register HDP and Utils Repos
-hdp_register_repo () {
+hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
 	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
@@ -398,7 +561,7 @@ hdp_register_repo () {
 }
 
 ## Build the Cluster
-hdp_cluster_build () {
+hdp_cluster_build(){
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
 	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
 }
@@ -406,17 +569,50 @@ hdp_cluster_build () {
 ##
 ## MAIN
 ##
-cd /home/opc/
-wprocs=`cat /tmp/wprocs`
-hdfsdisks=`cat /tmp/hdfsdisks`
-wc=`cat hosts | grep worker | wc -l`
-ambari_install
+
+## Pass Ambari Public IP - Ensure this is setup in the VCN
+# Validate Ambari is up and listening
+ambari_up=0
+while [ $ambari_up = "0" ]; do 
+	ambari_check=`(echo > /dev/tcp/${utilfqdn}/8080) >/dev/null 2>&1 && echo "UP" || echo "DOWN"`
+	if [ $ambari_check = "UP" ]; then 
+		echo -e "\n-> Ambari Server Found."
+		ambari_up=1
+		continue;
+	else
+		echo -ne "-> Ambari Server Not Detected... Retrying"
+		sleep 5
+	fi
+done;
+
+# Cluster Setup
+echo -e "-> Building HDP Configuration"
 hdp_build_config
+sleep 3
+echo -e "-> Registering HDP Cluster"
 hdp_register_cluster
+sleep 3
+echo -e "-> Registering HDP Repository"
 hdp_register_repo
-mysql_connector_install
+sleep 3
+echo -e "-> Building HDP $HDP_version Cluster $CLUSTER_NAME"
 hdp_cluster_build
+sleep 3
+# Setup new admin account
+echo -e "-> Creating new Admin account: ${ambari_login}"
+new_admin > ${ambari_login}.json
+curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json http://${utilfqdn}:8080/api/v1/users
+rm -f new_admin.json
+sleep 3
+# reset default  admin account to random password
+echo -e "-> Reset default admin account to random password"
+admin_password=`create_random_password`
+admin_password_json > admin.json
+curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json http://${utilfqdn}:8080/api/v1/users
+rm -f admin.json
 echo -e "----------------------------------"
 echo -e "-------- Cluster Building --------"
 echo -e "--- Login to Ambari for Status ---"
 echo -e "----------------------------------"
+echo -e "Ambari Login: http://${utilfqdn}:8080"
+
