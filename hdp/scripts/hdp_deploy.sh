@@ -2,7 +2,7 @@
 # Ambari Setup Script
 
 ## Util FQDN is the Public IP of the Ambari host
-utilfqdn=$1
+ambari_ip=$1
 ## AD is needed to set proper subnet for host topology
 ad=$2
 # Worker Shape - used for tuning
@@ -140,8 +140,7 @@ esac
 	
 # Set some global variables first
 
-## Ambari and HDP Version - Modify these to install specific version
-ambari_version="2.6.2.0"
+## HDP Version - Modify these to install specific version
 HDP_version="2.6.5.0"
 UTILS_version="1.1.0.22"
 
@@ -152,6 +151,7 @@ ambari_login="hdpadmin"
 ambari_password="somepassword"
 
 # Host Mapping needed for cluster config
+utilfqdn="hw-utility-1.public${ad}.hwvcn.oraclevcn.com"
 master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
 master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
 bastionfqdn="hw-bastion1.bastion${ad}.hwvcn.oraclevcn.com"
@@ -549,21 +549,21 @@ hdp_build_config(){
 hdp_register_cluster(){
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${ambari_ip}:8080/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
 }
 
 ## Register HDP and Utils Repos
 hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
-	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${utilfqdn}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${ambari_ip}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
+	curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin http://${ambari_ip}:8080/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
 }
 
 ## Build the Cluster
 hdp_cluster_build(){
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${utilfqdn}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
+	curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin http://${ambari_ip}:8080/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
 }
 
 ##
@@ -574,7 +574,7 @@ hdp_cluster_build(){
 # Validate Ambari is up and listening
 ambari_up=0
 while [ $ambari_up = "0" ]; do 
-	ambari_check=`(echo > /dev/tcp/${utilfqdn}/8080) >/dev/null 2>&1 && echo "UP" || echo "DOWN"`
+	ambari_check=`(echo > /dev/tcp/${ambari_ip}/8080) >/dev/null 2>&1 && echo "UP" || echo "DOWN"`
 	if [ $ambari_check = "UP" ]; then 
 		echo -e "\n-> Ambari Server Found."
 		ambari_up=1
@@ -601,18 +601,18 @@ sleep 3
 # Setup new admin account
 echo -e "-> Creating new Admin account: ${ambari_login}"
 new_admin > ${ambari_login}.json
-curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json http://${utilfqdn}:8080/api/v1/users
+curl -i -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json http://${ambari_ip}:8080/api/v1/users
 rm -f new_admin.json
 sleep 3
 # reset default  admin account to random password
 echo -e "-> Reset default admin account to random password"
 admin_password=`create_random_password`
 admin_password_json > admin.json
-curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json http://${utilfqdn}:8080/api/v1/users
+curl -i -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json http://${ambari_ip}:8080/api/v1/users
 rm -f admin.json
 echo -e "----------------------------------"
 echo -e "-------- Cluster Building --------"
 echo -e "--- Login to Ambari for Status ---"
 echo -e "----------------------------------"
-echo -e "Ambari Login: http://${utilfqdn}:8080"
+echo -e "Ambari Login: http://${ambari_ip}:8080"
 

@@ -16,7 +16,7 @@ resource "oci_core_instance" "Master" {
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
     user_data		= "${var.user_data}"
-    ambari_server       = "hw-utility-1.public${var.availability_domain}.hwvcn.oraclevcn.com"
+    ambari_server       = "${var.ambari_server}"
   }
 
   timeouts {

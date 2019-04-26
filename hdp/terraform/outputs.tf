@@ -1,1 +1,1 @@
-output "DEPLOYMENT COMMAND" { value = "python ../scripts/deploy_on_oci.py -B -m ${module.utility.public-ip} -d ${module.worker.block-volume-count} -w ${var.worker_instance_shape}" }
+output "DEPLOYMENT COMMAND" { value = "../scripts/hdp_deploy.sh ${module.utility.public-ip} ${var.availability_domain} ${var.worker_instance_shape} ${module.worker.block-volume-count} ${var.worker_node_count}" }

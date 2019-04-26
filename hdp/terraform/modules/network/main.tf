@@ -6,7 +6,7 @@ resource "oci_core_vcn" "hortonworks_vcn" {
   cidr_block     = "${var.VPC-CIDR}"
   compartment_id = "${var.compartment_ocid}"
   display_name   = "hortonworks_vcn"
-  dns_label      = "cdhvcn"
+  dns_label      = "hwvcn"
 }
 
 resource "oci_core_internet_gateway" "hortonworks_internet_gateway" {

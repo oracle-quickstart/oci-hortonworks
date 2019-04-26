@@ -12,6 +12,7 @@ variable "ssh_private_key" {}
 variable "instances" {}
 variable "subnet_id" {}
 variable "user_data" {}
+variable "ambari_server" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
