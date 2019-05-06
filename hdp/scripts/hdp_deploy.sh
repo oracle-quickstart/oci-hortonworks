@@ -154,7 +154,7 @@ ambari_password="somepassword"
 utilfqdn="hw-utility-1.public${ad}.hwvcn.oraclevcn.com"
 master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
 master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
-bastionfqdn="hw-bastion1.bastion${ad}.hwvcn.oraclevcn.com"
+bastionfqdn="hw-bastion.bastion${ad}.hwvcn.oraclevcn.com"
 
 ##
 ## Functions

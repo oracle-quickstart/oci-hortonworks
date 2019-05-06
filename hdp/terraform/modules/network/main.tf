@@ -21,6 +21,17 @@ resource "oci_core_nat_gateway" "nat_gateway" {
   display_name   = "nat_gateway"
 }
 
+resource "oci_core_dhcp_options" "hortonworks_vcn_dhcp_options" {
+  compartment_id = "${var.compartment_ocid}"
+  vcn_id         = "${oci_core_vcn.hortonworks_vcn.id}"
+  display_name   = "hw_vcn_dhcp_options"
+
+  options {
+    type 	= "DomainNameServer"
+    server_type = "VcnLocalPlusInternet"
+    }
+}
+
 data "oci_core_services" "hortonworks_services" {
 }
 
@@ -167,7 +178,7 @@ resource "oci_core_subnet" "public" {
   vcn_id              = "${oci_core_vcn.hortonworks_vcn.id}"
   route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
   security_list_ids   = ["${oci_core_security_list.PublicSubnet.id}"]
-  dhcp_options_id     = "${oci_core_vcn.hortonworks_vcn.default_dhcp_options_id}"
+  dhcp_options_id     = "${oci_core_dhcp_options.hortonworks_vcn_dhcp_options.id}"
   dns_label           = "public${count.index+1}"
 }
 
@@ -180,7 +191,7 @@ resource "oci_core_subnet" "private" {
   vcn_id              = "${oci_core_vcn.hortonworks_vcn.id}"
   route_table_id      = "${oci_core_route_table.private.id}"
   security_list_ids   = ["${oci_core_security_list.PrivateSubnet.id}"]
-  dhcp_options_id     = "${oci_core_vcn.hortonworks_vcn.default_dhcp_options_id}"
+  dhcp_options_id     = "${oci_core_dhcp_options.hortonworks_vcn_dhcp_options.id}"
   prohibit_public_ip_on_vnic = "true"
   dns_label = "private${count.index+1}"
 }
@@ -194,6 +205,6 @@ resource "oci_core_subnet" "bastion" {
   vcn_id              = "${oci_core_vcn.hortonworks_vcn.id}"
   route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
   security_list_ids   = ["${oci_core_security_list.BastionSubnet.id}"]
-  dhcp_options_id     = "${oci_core_vcn.hortonworks_vcn.default_dhcp_options_id}"
+  dhcp_options_id     = "${oci_core_dhcp_options.hortonworks_vcn_dhcp_options.id}"
   dns_label           = "bastion${count.index+1}"
 }

@@ -21,6 +21,7 @@ wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/h
 
 # Modify /etc/ambari-agent/conf/ambari-agent.ini
 sed -i "s/localhost/${utilfqdn}/g" /etc/ambari-agent/conf/ambari-agent.ini
+sed -i -e $'s/\[security\]/\[security\]\\nforce_https_protocol=PROTOCOL_TLSv1_2/g' /etc/ambari-agent/conf/ambari-agent.ini
 log"->Startup"
 service ambari-agent start
 
@@ -33,11 +34,6 @@ log "->Start"
 # Disable SELinux
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
-
-## Modify resolv.conf to ensure DNS lookups work
-rm -f /etc/resolv.conf
-echo "search public1.hwvcn.oraclevcn.com public2.hwvcn.oraclevcn.com public3.hwvcn.oraclevcn.com private1.hwvcn.oraclevcn.com private2.hwvcn.oraclevcn.com private3.hwvcn.oraclevcn.com bastion1.hwvcn.oraclevcn.com bastion2.hwvcn.oraclevcn.com bastion3.hwvcn.oraclevcn.com" > /etc/resolv.conf
-echo "nameserver 169.254.169.254" >> /etc/resolv.conf
 
 EXECNAME="JAVA - KERBEROS"
 log "->INSTALL"
@@ -238,10 +234,15 @@ while [ "$detection_flag" = "0" ]; do
                         fi
                 fi
         done;
-	if [ "$volume_count" = "0" ]; then 
-		log "-- $volume_count Block Volumes detected, sleeping 30 then retry --"
-		sleep 30
-		continue
+	if [ "$volume_count" = "0" ]; then
+                if [ "$volume_count" = "$sanity_volume_count" ]; then
+                        log "-- $volume_count Block Volumes found, done."
+                        detection_flag="1"
+                else
+                        log "-- Sanity Check Failed - $sanity_volume_count Volumes found, $volume_count on first run.  Re-running --"
+                        sleep 30
+                        continue
+                fi
 	elif [ "$volume_count" != "$sanity_volume_count" ]; then
 		log "-- Sanity Check Failed - $sanity_volume_count Volumes found, $volume_count on first run.  Re-running --"
 		sleep 15
