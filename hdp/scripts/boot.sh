@@ -128,14 +128,6 @@ systemctl stop firewalld
 systemctl disable firewalld
 
 ## Post Tuning Execution Below
-EXECNAME="MYSQL Connector"
-## MySQL Connector Install
-log "->INSTALL"
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.46.tar.gz
-tar zxvf mysql-connector-java-5.1.46.tar.gz
-mkdir -p /usr/share/java/
-cd mysql-connector-java-5.1.46
-cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
 
 #
 # DISK SETUP

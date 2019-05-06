@@ -136,6 +136,7 @@ tar zxvf mysql-connector-java-5.1.46.tar.gz
 mkdir -p /usr/share/java/
 cd mysql-connector-java-5.1.46
 cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
+ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar
 
 #
 # DISK SETUP

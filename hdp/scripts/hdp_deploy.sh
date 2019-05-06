@@ -231,7 +231,7 @@ cat << EOF
         }, {
             "name": "datanode",
             "host_count": "${wc}",
-	    "host_predicate": "Hosts/cpu_count=${wprocs}"
+	    "host_predicate": "Hosts/cpu_count=$((wprocs*2))"
         }, {
             "name": "bastion",
             "hosts": [{ "fqdn": "${bastionfqdn}" }]
