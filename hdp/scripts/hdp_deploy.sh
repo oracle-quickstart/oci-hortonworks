@@ -549,21 +549,21 @@ hdp_build_config(){
 hdp_register_cluster(){
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:8443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
+	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
 }
 
 ## Register HDP and Utils Repos
 hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:8443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
-	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:8443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
+	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
+	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
 }
 
 ## Build the Cluster
 hdp_cluster_build(){
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:8443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
+	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
 }
 
 ##
@@ -574,7 +574,7 @@ hdp_cluster_build(){
 # Validate Ambari is up and listening
 ambari_up=0
 while [ $ambari_up = "0" ]; do 
-	ambari_check=`(echo > /dev/tcp/${ambari_ip}/8443) >/dev/null 2>&1 && echo "UP" || echo "DOWN"`
+	ambari_check=`(echo > /dev/tcp/${ambari_ip}/9443) >/dev/null 2>&1 && echo "UP" || echo "DOWN"`
 	if [ $ambari_check = "UP" ]; then 
 		echo -e "\n-> Ambari Server Found."
 		ambari_up=1
@@ -601,18 +601,18 @@ sleep 3
 # Setup new admin account
 echo -e "-> Creating new Admin account: ${ambari_login}"
 new_admin > ${ambari_login}.json
-curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:8443/api/v1/users
+curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users
 rm -f new_admin.json
 sleep 3
 # reset default  admin account to random password
 echo -e "-> Reset default admin account to random password"
 admin_password=`create_random_password`
 admin_password_json > admin.json
-curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:8443/api/v1/users
+curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users
 rm -f admin.json
 echo -e "----------------------------------"
 echo -e "-------- Cluster Building --------"
 echo -e "--- Login to Ambari for Status ---"
 echo -e "----------------------------------"
-echo -e "Ambari Login: https://${ambari_ip}:8443"
+echo -e "Ambari Login: https://${ambari_ip}:9443"
 

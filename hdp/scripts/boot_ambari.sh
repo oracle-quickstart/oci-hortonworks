@@ -25,6 +25,9 @@ wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambar
 yum install ambari-server ambari-agent -y
 ambari-server setup -s
 ambari-server setup-security --security-option=setup-https --api-ssl=true --api-ssl-port=8443 --import-cert-path=/etc/ambari-server/certs/${utilfqdn}.crt --import-key-path=/etc/ambari-server/certs/${utilfqdn}.key --pem-password=
+sed -i 's/client.api.ssl.port=8443/client.api.ssl.port=9443/g' /etc/ambari-server/conf/ambari.properties
+wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
+unzip -o -j -q jce_policy-8.zip -d /usr/jdk64/jdk1.8.0_*/jre/lib/security/
 service ambari-server start
 wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
@@ -56,7 +59,7 @@ log "-> INSTALL"
 
 yum -y install krb5-server krb5-libs krb5-workstation
 KERBEROS_PASSWORD="SOMEPASSWORD"
-SCM_USER_PASSWORD="somepassword"
+AMBARI_USER_PASSWORD="somepassword"
 kdc_server=$(hostname)
 kdc_fqdn=`host $kdc_server | gawk '{print $1}'`
 realm="hadoop.com"
@@ -127,12 +130,12 @@ EOF
 rm -f /var/kerberos/krb5kdc/kadm5.acl
 cat > /var/kerberos/krb5kdc/kadm5.acl << EOF
 */admin@${REALM}    *
-cloudera-scm@${REALM}   *
+ambari/admin@${REALM}   *
 EOF
 
 kdb5_util create -r ${REALM} -s -P ${KERBEROS_PASSWORD}
 
-echo -e "addprinc root/admin\n${KERBEROS_PASSWORD}\n${KERBEROS_PASSWORD}\naddprinc cloudera-scm\n${SCM_USER_PASSWORD}\n${SCM_USER_PASSWORD}\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/changepw\nexit\n" | kadmin.local -r ${REALM}
+echo -e "addprinc root/admin\n${KERBEROS_PASSWORD}\n${KERBEROS_PASSWORD}\naddprinc ambari/admin\n${AMBARI_USER_PASSWORD}\n${AMBARI_USER_PASSWORD}\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/changepw\nexit\n" | kadmin.local -r ${REALM}
 log "-> START"
 systemctl start krb5kdc.service
 systemctl start kadmin.service
