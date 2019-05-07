@@ -11,7 +11,7 @@ module "bastion" {
 	private_key_path = "${var.private_key_path}"
 	bastion_instance_shape = "${var.bastion_instance_shape}" 
 	user_data = "${base64encode(file("../scripts/boot.sh"))}"
-	ambari_server = "hw-utility-1.public${var.availability_domain}.hwvcn.oraclevcn.com"
+	ambari_server = "hw-utility-1.public${var.availability_domain}.${module.network.vcn-dn}"
 }
 
 module "utility" {
@@ -27,7 +27,7 @@ module "utility" {
         private_key_path = "${var.private_key_path}"
         utility_instance_shape = "${var.utility_instance_shape}"
         user_data = "${base64encode(file("../scripts/boot_ambari.sh"))}"
-	ambari_server = "hw-utility-1.public${var.availability_domain}.hwvcn.oraclevcn.com"
+	ambari_server = "hw-utility-1.public${var.availability_domain}.${module.network.vcn-dn}"
 }
 
 module "master" {
@@ -43,7 +43,7 @@ module "master" {
         private_key_path = "${var.private_key_path}"
         master_instance_shape = "${var.master_instance_shape}"
         user_data = "${base64encode(file("../scripts/boot.sh"))}"
-	ambari_server = "hw-utility-1.public${var.availability_domain}.hwvcn.oraclevcn.com"
+	ambari_server = "hw-utility-1.public${var.availability_domain}.${module.network.vcn-dn}"
 }
 
 module "worker" {
@@ -62,5 +62,5 @@ module "worker" {
 	hdfs_usable_in_gbs = "${var.hdfs_usable_in_gbs}"
 	data_blocksize_in_gbs = "${var.data_blocksize_in_gbs}"
         user_data = "${base64encode(file("../scripts/boot.sh"))}"
-	ambari_server = "hw-utility-1.public${var.availability_domain}.hwvcn.oraclevcn.com"
+	ambari_server = "hw-utility-1.public${var.availability_domain}.${module.network.vcn-dn}"
 }

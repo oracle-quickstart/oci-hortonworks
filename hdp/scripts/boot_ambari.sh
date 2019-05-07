@@ -8,13 +8,23 @@ log() {
   echo "$(date) [${EXECNAME}]: $*" >> "${LOG_FILE}"
 }
 
-EXECNAME="Ambari"
+EXECNAME="Ambari Certificate"
+mkdir -p /etc/ambari-server/certs
+cd /etc/ambari-server/certs
+log "->Generate & Deploy"
+openssl genrsa -out ${utilfqdn}.key 2048
+# This should be customized to your organization
+openssl req -new -key ${utilfqdn}.key -out ${utilfqdn}.csr -subj "/C=US/ST=Washington/L=Seattle/O=OCI/OU=Hortonworks/CN=${utilfqdn}"
+openssl x509 -req -days 365 -in ${utilfqdn}.csr -signkey ${utilfqdn}.key -out ${utilfqdn}.crt
+
+EXECNAME="Ambari Server & Agent"
 log "->Install"
 # Ambari Agent Install
 ambari_version="2.6.2.0"
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-server ambari-agent -y
 ambari-server setup -s
+ambari-server setup-security --security-option=setup-https --api-ssl=true --api-ssl-port=8443 --import-cert-path=/etc/ambari-server/certs/${utilfqdn}.crt --import-key-path=/etc/ambari-server/certs/${utilfqdn}.key --pem-password=
 service ambari-server start
 wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
@@ -40,10 +50,14 @@ log "->INSTALL"
 ## Install Java & Kerberos client
 yum install java-1.8.0-openjdk.x86_64 krb5-workstation -y
 
+## KERBEROS INSTALL
 EXECNAME="KERBEROS"
-log "->krb5.conf"
-## Configure krb5.conf
-kdc_server='hw-utility-1'
+log "-> INSTALL"
+
+yum -y install krb5-server krb5-libs krb5-workstation
+KERBEROS_PASSWORD="SOMEPASSWORD"
+SCM_USER_PASSWORD="somepassword"
+kdc_server=$(hostname)
 kdc_fqdn=`host $kdc_server | gawk '{print $1}'`
 realm="hadoop.com"
 REALM="HADOOP.COM"
@@ -85,6 +99,45 @@ includedir /etc/krb5.conf.d/
     admin_server = FILE:/var/log/kadmin.log
     default = FILE:/var/log/krb5lib.log
 EOF
+
+
+rm -f /var/kerberos/krb5kdc/kdc.conf
+cat > /var/kerberos/krb5kdc/kdc.conf << EOF
+default_realm = ${REALM}
+
+[kdcdefaults]
+    v4_mode = nopreauth
+    kdc_ports = 0
+
+[realms]
+    ${REALM} = {
+        kdc_ports = 88
+        admin_keytab = /var/kerberos/krb5kdc/kadm5.keytab
+        database_name = /var/kerberos/krb5kdc/principal
+        acl_file = /var/kerberos/krb5kdc/kadm5.acl
+        key_stash_file = /var/kerberos/krb5kdc/stash
+        max_life = 10h 0m 0s
+        max_renewable_life = 7d 0h 0m 0s
+        master_key_type = des3-hmac-sha1
+        supported_enctypes = rc4-hmac:normal 
+        default_principal_flags = +preauth
+    }
+EOF
+
+rm -f /var/kerberos/krb5kdc/kadm5.acl
+cat > /var/kerberos/krb5kdc/kadm5.acl << EOF
+*/admin@${REALM}    *
+cloudera-scm@${REALM}   *
+EOF
+
+kdb5_util create -r ${REALM} -s -P ${KERBEROS_PASSWORD}
+
+echo -e "addprinc root/admin\n${KERBEROS_PASSWORD}\n${KERBEROS_PASSWORD}\naddprinc cloudera-scm\n${SCM_USER_PASSWORD}\n${SCM_USER_PASSWORD}\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/changepw\nexit\n" | kadmin.local -r ${REALM}
+log "-> START"
+systemctl start krb5kdc.service
+systemctl start kadmin.service
+systemctl enable krb5kdc.service
+systemctl enable kadmin.service
 
 EXECNAME="TUNING"
 log "->OS"

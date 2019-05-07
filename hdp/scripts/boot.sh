@@ -43,8 +43,8 @@ yum install java-1.8.0-openjdk.x86_64 krb5-workstation -y
 EXECNAME="KERBEROS"
 log "->krb5.conf"
 ## Configure krb5.conf
-kdc_server='hw-utility-1'
-kdc_fqdn=`host $kdc_server | gawk '{print $1}'`
+kdc_server=${utilfqdn}
+kdc_fqdn=${utilfqdn}
 realm="hadoop.com"
 REALM="HADOOP.COM"
 log "-> CONFIG"

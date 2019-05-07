@@ -2,7 +2,7 @@ resource "oci_core_instance" "Utility" {
   availability_domain = "${var.availability_domain}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "HW Utility-1"
-  hostname_label      = "HW-Utility-1"
+  hostname_label      = "hw-utility-1"
   shape               = "${var.utility_instance_shape}"
   subnet_id           = "${var.subnet_id}"
   fault_domain	      = "FAULT-DOMAIN-3"
