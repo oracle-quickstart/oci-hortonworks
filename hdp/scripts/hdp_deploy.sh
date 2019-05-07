@@ -549,21 +549,21 @@ hdp_build_config(){
 hdp_register_cluster(){
 	## Register BP with Ambari
 	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json > /dev/null
 }
 
 ## Register HDP and Utils Repos
 hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json
-	curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json > /dev/null
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json > /dev/null
 }
 
 ## Build the Cluster
 hdp_cluster_build(){
 	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json > /dev/null
 }
 
 ##
@@ -584,7 +584,8 @@ while [ $ambari_up = "0" ]; do
 		sleep 5
 	fi
 done;
-
+start_time=`date +%Y-%m%d-%H:%M:%S`
+start_time_s=`date +%H:%M:%S`
 # Cluster Setup
 echo -e "-> Building HDP Configuration"
 hdp_build_config
@@ -601,18 +602,47 @@ sleep 3
 # Setup new admin account
 echo -e "-> Creating new Admin account: ${ambari_login}"
 new_admin > ${ambari_login}.json
-curl -i -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users
+curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users > /dev/null
 rm -f new_admin.json
 sleep 3
 # reset default  admin account to random password
 echo -e "-> Reset default admin account to random password"
 admin_password=`create_random_password`
 admin_password_json > admin.json
-curl -i -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users
+curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users > /dev/null
 rm -f admin.json
-echo -e "----------------------------------"
-echo -e "-------- Cluster Building --------"
-echo -e "--- Login to Ambari for Status ---"
+sleep 5 
+completed_requests="0"
+echo -e "Checking Ambari requests..."
+total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
+echo -e "$total_requests requests found."
+if [ $total_requests = "0" ]; then 
+	echo -e "Failed to find requests... heck Ambari manually for cluster status."
+	echo -e "Ambari Login: https://${ambari_ip}:9443"
+	exit
+fi
+spin="+"
+while [ $completed_requests != $total_requests ]; do 
+	completed_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "COMPLETED" | wc -l`
+	pending_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "PENDING" | wc -l`
+	in_progress_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "IN_PROGRESS" | wc -l`
+	total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
+	echo -ne " [${spin}] Cluster Build Status: $pending_requests pending, $in_progress_requests in progress, ${completed_requests}/${total_requests} complete.\r"
+	case $spin in
+		+) spin="x";;
+		x) spin="+";;
+	esac
+	sleep 5
+done;
+echo -e "\n"
+end_time=`date +%Y-%m%d-%H:%M:%S`
+end_time_s=`date +%H:%M:%S` 
+echo -e "\t--CLUSTER SETUP COMPLETE--"
+echo -e "\t--SUMMARY--"
+total1=`date +%s -d ${start_time_s}`
+total2=`date +%s -d ${end_time_s}`
+totaldiff=`expr ${total2} - ${total1}`
+echo -e "\tCluster Setup Took `date +%H:%M:%S -ud @${totaldiff}`"
 echo -e "----------------------------------"
 echo -e "Ambari Login: https://${ambari_ip}:9443"
 
