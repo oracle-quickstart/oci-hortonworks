@@ -66,7 +66,7 @@ includedir /etc/krb5.conf.d/
  udp_preference_limit = 1000000
  default_tkt_enctypes = rc4-hmac 
  default_tgs_enctypes = rc4-hmac
- permitted_enctypes = rc4-hmac
+ permitted_enctypes = rc4-hmac 
 
 [realms]
     ${REALM} = {
@@ -78,6 +78,24 @@ includedir /etc/krb5.conf.d/
 [domain_realm]
     .${realm} = ${REALM}
      ${realm} = ${REALM}
+    bastion1.hwvcn.oraclevcn.com = ${REALM}
+    .bastion1.hwvcn.oraclevcn.com = ${REALM}
+    bastion2.hwvcn.oraclevcn.com = ${REALM}
+    .bastion2.hwvcn.oraclevcn.com = ${REALM}
+    bastion3.hwvcn.oraclevcn.com = ${REALM}
+    .bastion3.hwvcn.oraclevcn.com = ${REALM}
+    .public1.hwvcn.oraclevcn.com = ${REALM}
+    public1.hwvcn.oraclevcn.com = ${REALM}
+    .public2.hwvcn.oraclevcn.com = ${REALM}
+    public2.hwvcn.oraclevcn.com = ${REALM}
+    .public3.hwvcn.oraclevcn.com = ${REALM}
+    public3.hwvcn.oraclevcn.com = ${REALM}
+    .private1.hwvcn.oraclevcn.com = ${REALM}
+    private1.hwvcn.oraclevcn.com = ${REALM}
+    .private2.hwvcn.oraclevcn.com = ${REALM}
+    private2.hwvcn.oraclevcn.com = ${REALM}
+    .private3.hwvcn.oraclevcn.com = ${REALM}
+    private3.hwvcn.oraclevcn.com = ${REALM}
 
 [kdc]
     profile = /var/kerberos/krb5kdc/kdc.conf

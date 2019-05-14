@@ -140,6 +140,21 @@ resource "oci_core_security_list" "PublicSubnet" {
     protocol = "6"
     source   = "${var.VPC-CIDR}"
   }]
+
+  egress_security_rules = [{
+    protocol    = "6"
+    destination = "${var.VPC-CIDR}"
+  }]
+
+  egress_security_rules = [{
+    protocol    = "17"
+    destination = "${var.VPC-CIDR}"
+  }]
+
+  ingress_security_rules = [{
+    protocol = "17"
+    source   = "${var.VPC-CIDR}"
+  }]
 }
 
 resource "oci_core_security_list" "PrivateSubnet" {
@@ -159,6 +174,16 @@ resource "oci_core_security_list" "PrivateSubnet" {
 
   ingress_security_rules = [{
     protocol = "6"
+    source   = "${var.VPC-CIDR}"
+  }]
+
+  egress_security_rules = [{
+    protocol    = "17"
+    destination = "${var.VPC-CIDR}"
+  }]
+
+  ingress_security_rules = [{
+    protocol = "17"
     source   = "${var.VPC-CIDR}"
   }]
 }
