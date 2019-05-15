@@ -1,11 +1,31 @@
 #!/bin/bash
+#Extract Utility server from metadata
 utilfqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
+
+# Change this prior to deployment
+mysql_db_password="somepassword"
+ambari_user="ambari"
+ambari_db_password="somepassword"
+ambari_version="2.6.2.0"
+#
 
 LOG_FILE="/var/log/hortonworks-OCI-initialize.log"
 
 ## logs everything to the $LOG_FILE
 log() {
   echo "$(date) [${EXECNAME}]: $*" >> "${LOG_FILE}"
+}
+
+gen_mysql () {
+cat << EOF 
+CREATE USER '${ambari_user}'@'%' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'%';
+CREATE USER '${ambari_user}'@'localhost' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'localhost';
+CREATE USER '${ambari_user}'@'${utilfqdn}' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'${utilfqdn}';
+FLUSH PRIVILEGES;
+EOF
 }
 
 EXECNAME="Ambari Certificate"
@@ -17,13 +37,66 @@ openssl genrsa -out ${utilfqdn}.key 2048
 openssl req -new -key ${utilfqdn}.key -out ${utilfqdn}.csr -subj "/C=US/ST=Washington/L=Seattle/O=OCI/OU=Hortonworks/CN=${utilfqdn}"
 openssl x509 -req -days 365 -in ${utilfqdn}.csr -signkey ${utilfqdn}.key -out ${utilfqdn}.crt
 
+EXECNAME="MYSQL Server"
+log "->Install"
+wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+rpm -ivh mysql-community-release-el7-5.noarch.rpm
+yum install mysql-server mysql-connector-java* epel-release -y
+log "->Tuning"
+head -n -6 /etc/my.cnf >> /etc/my.cnf.new
+mv /etc/my.cnf /etc/my.cnf.rpminstall
+mv /etc/my.cnf.new /etc/my.cnf
+echo -e "transaction_isolation = READ-COMMITTED\n\
+read_buffer_size = 2M\n\
+read_rnd_buffer_size = 16M\n\
+sort_buffer_size = 8M\n\
+join_buffer_size = 8M\n\
+query_cache_size = 64M\n\
+query_cache_limit = 8M\n\
+query_cache_type = 1\n\
+thread_stack = 256K\n\
+thread_cache_size = 64\n\
+max_connections = 700\n\
+key_buffer_size = 32M\n\
+max_allowed_packet = 32M\n\
+log_bin=/var/lib/mysql/mysql_binary_log\n\
+server_id=1\n\
+binlog_format = mixed\n\
+\n\
+# InnoDB Settings\n\
+innodb_file_per_table = 1\n\
+innodb_flush_log_at_trx_commit = 2\n\
+innodb_log_buffer_size = 64M\n\
+innodb_thread_concurrency = 8\n\
+innodb_buffer_pool_size = 4G\n\
+innodb_flush_method = O_DIRECT\n\
+innodb_log_file_size = 512M\n\
+\n\
+[mysqld_safe]\n\
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid \n\
+\n\
+sql_mode=STRICT_ALL_TABLES\n\
+" >> /etc/my.cnf
+log "-->Database setup"
+systemctl enable mysqld
+systemctl start mysqld
+gen_mysql > mysql-setup.sql
+#execute sql file
+mysql -u root < mysql-setup.sql
+#change Mysql password to DB Password
+mysqladmin -u root password ${mysql_db_password}
+
 EXECNAME="Ambari Server & Agent"
 log "->Install"
 # Ambari Agent Install
-ambari_version="2.6.2.0"
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-server ambari-agent -y
-ambari-server setup -s
+# Bootstrap MySQL for Ambari
+mysql -u ${ambari_user} -p${ambari_db_password} -e 'CREATE DATABASE ambari'
+mysql -u ${ambari_user} -p${ambari_db_password} -D ambari < /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql
+ambari-server setup -s --databasehost=${utilfqdn} --database=mysql --databaseport=3306 --databasename=ambari --databaseusername=${ambari_user} --databasepassword=${ambari_db_password}
+ambari-server setup  --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
 ambari-server setup-security --security-option=setup-https --api-ssl=true --api-ssl-port=8443 --import-cert-path=/etc/ambari-server/certs/${utilfqdn}.crt --import-key-path=/etc/ambari-server/certs/${utilfqdn}.key --pem-password=
 sed -i 's/client.api.ssl.port=8443/client.api.ssl.port=9443/g' /etc/ambari-server/conf/ambari.properties
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
@@ -200,17 +273,6 @@ ulimit -n 262144
 log "->FirewallD"
 systemctl stop firewalld
 systemctl disable firewalld
-
-## Post Tuning Execution Below
-EXECNAME="MYSQL Connector"
-## MySQL Connector Install
-log "->INSTALL"
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.46.tar.gz
-tar zxvf mysql-connector-java-5.1.46.tar.gz
-mkdir -p /usr/share/java/
-cd mysql-connector-java-5.1.46
-cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
-ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar
 
 #
 # DISK SETUP

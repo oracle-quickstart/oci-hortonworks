@@ -601,7 +601,7 @@ check_ambari_requests(){
 		
 		
 	done;
-	echo -e "->Action Complete."
+	echo -e "\n->Action Complete."
 }
 
 # Build Kerberos Service Payload
