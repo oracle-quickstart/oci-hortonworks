@@ -1,15 +1,17 @@
 #!/bin/bash
-# Ambari Setup Script
+# Ambari Setup Script to deploy HDP
+
+# Parameters are passed to script
 
 ## Util FQDN is the Public IP of the Ambari host
 ambari_ip=$1
 ## AD is needed to set proper subnet for host topology
 ad=$2
-# Worker Shape - used for tuning
+## Worker Shape - used for tuning
 worker_shape=$3
-# Number of Block Volume HDFS Disks
+## Number of Block Volume HDFS Disks
 block_disks=$4
-# Number of Workers
+## Number of Workers
 wc=$5
 
 
@@ -18,6 +20,28 @@ if [ -z $5 ]; then
 	echo "./hdp_install.sh <ambari_public_ip> <availability_domain> <worker_shape> <block_volume_hdfs_disk_count> <worker_count>"
 	exit
 fi
+
+# Set some Global Variables first
+
+## HDP Version - Modify these to install specific version
+HDP_version="2.6.5.0"
+UTILS_version="1.1.0.22"
+
+## Cluster Info 
+CLUSTER_NAME="TestCluster"
+## Set a new admin account and password
+ambari_login="hdpadmin"
+ambari_password="somepassword"
+
+## Host Mapping needed for cluster config
+utilfqdn="hw-utility-1.public${ad}.hwvcn.oraclevcn.com"
+master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
+master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
+bastionfqdn="hw-bastion.bastion${ad}.hwvcn.oraclevcn.com"
+
+# End Global Variables
+
+# Worker Shape Mapping 
 
 case $worker_shape in
 	BM.Standard.E2.64)
@@ -136,26 +160,6 @@ case $worker_shape in
 
 esac	
 	
-
-	
-# Set some global variables first
-
-## HDP Version - Modify these to install specific version
-HDP_version="2.6.5.0"
-UTILS_version="1.1.0.22"
-
-## Cluster Info 
-CLUSTER_NAME="TestCluster"
-# Set a new admin account
-ambari_login="hdpadmin"
-ambari_password="somepassword"
-
-# Host Mapping needed for cluster config
-utilfqdn="hw-utility-1.public${ad}.hwvcn.oraclevcn.com"
-master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
-master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
-bastionfqdn="hw-bastion.bastion${ad}.hwvcn.oraclevcn.com"
-
 ##
 ## Functions
 ##
@@ -185,7 +189,7 @@ cat << EOF
 EOF
 }
 
-## Detect and generate DFS config for HDFS
+# Detect and generate DFS config for HDFS
 create_hdfs_config(){
 dc=0
 while [ $dc -lt $hdfs_disks ]; do
@@ -213,7 +217,7 @@ while [ $dc -lt $hdfs_disks ]; do
 done;
 }
 
-## Create Cluster hostmap.json
+# Create Cluster hostmap.json
 create_dynamic_hostmap(){
 cat << EOF
 {
@@ -243,7 +247,8 @@ cat << EOF
 EOF
 }
 
-## Create Cluster configuration cluster_config.json
+# Create Cluster configuration cluster_config.json
+# Modify this section carefully to apply custom cluster configuration at build time
 create_cluster_config(){
 cat << EOF
 {
@@ -510,7 +515,7 @@ cat << EOF
 EOF
 }
 
-## Set HDP Repo
+# Set HDP Repo
 hdp_repo(){
 cat << EOF
     {
@@ -523,7 +528,7 @@ cat << EOF
 EOF
 }
 
-## Set Utils Repo
+# Set Utils Repo
 hdp_utils_repo(){
 cat << EOF
     {
@@ -536,7 +541,7 @@ cat << EOF
 EOF
 }
 
-## Config Execution wrapper
+# Config Execution wrapper
 hdp_build_config(){
 	create_hdfs_config
 	create_cluster_config > cluster_config.json
@@ -545,25 +550,168 @@ hdp_build_config(){
 	hdp_utils_repo > hdputils-repo.json
 }
 
-## Submit Cluster Configuration Blueprint
+# Submit Cluster Configuration Blueprint
 hdp_register_cluster(){
 	## Register BP with Ambari
-	echo -e "\n-->Submitting cluster_config.json<--"
-	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json > /dev/null
+	echo -e "-->Submitting cluster_config.json<--"
+	echo -e "-->Submitting cluster_config.json<--" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json >> hdp_deploy_output.log 
 }
 
-## Register HDP and Utils Repos
+# Register HDP and Utils Repos
 hdp_register_repo(){
 	## Setup Repo using REST API
-	echo -e "\n-->Submitting HDP and HDP Utils repo.json<--"
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json > /dev/null
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json > /dev/null
+	echo -e "-->Submitting HDP and HDP Utils repo.json<--"
+	echo -e "-->Submitting HDP and HDP Utils repo.json<--" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json >> hdp_deploy_output.log
 }
 
-## Build the Cluster
+# Build the Cluster
 hdp_cluster_build(){
-	echo -e "\n-->Submitting hostmap.json (Cluster Build)<--"
-	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json > /dev/null
+	echo -e "-->Submitting hostmap.json<--"
+	echo -e "-->Submitting hostmap.json<--" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json >> hdp_deploy_output.log
+}
+
+# Check Ambari Requests - wait until finished
+check_ambari_requests(){
+	sleep 5
+	completed_requests="0"
+	echo -e "Checking Ambari requests..."
+	total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
+	echo -e "$total_requests requests found."
+	if [ $total_requests = "0" ]; then
+	        echo -e "Failed to find requests... check Ambari manually for cluster status, check hdp_deplooy_output.log for more detail."
+	        echo -e "Ambari Login: https://${ambari_ip}:9443"
+	        exit
+	fi
+	spin="+"
+	while [ $completed_requests != $total_requests ]; do
+        	completed_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "COMPLETED" | wc -l`
+	        pending_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "PENDING" | wc -l`
+	        in_progress_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "IN_PROGRESS" | wc -l`
+	        total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
+	        echo -ne " [${spin}] Cluster Action Status: $pending_requests pending, $in_progress_requests in progress, ${completed_requests}/${total_requests} complete.\r"
+	        case $spin in
+        	        +) spin="x";;
+	                x) spin="+";;
+	        esac
+	        sleep 5
+	done;
+	echo -e "\n"
+}
+
+# Build Kerberos Service Payload
+build_kerberos_payload(){
+cat << EOF
+[
+  {
+    "Clusters": {
+      "desired_config": {
+        "type": "krb5-conf",
+        "tag": "version1",
+        "properties": {
+          "domains":"",
+          "manage_krb5_conf": "false",
+          "conf_dir":"/etc",
+	  "content" : " "
+        }
+      }
+    }
+  },
+  {
+    "Clusters": {
+      "desired_config": {
+        "type": "kerberos-env",
+        "tag": "version1",
+        "properties": {
+          "kdc_type": "mit-kdc",
+          "manage_identities": "true",
+          "install_packages": "true",
+          "encryption_types": "rc4-hmac",
+          "realm" : "HADOOP.COM",
+          "kdc_hosts" : "${utilfqdn}",
+          "kdc_host" : "${utilfqdn}",
+          "admin_server_host" : "${utilfqdn}",
+          "executable_search_paths" : "/usr/bin, /usr/kerberos/bin, /usr/sbin, /usr/lib/mit/bin, /usr/lib/mit/sbin",
+          "password_length": "20",
+          "password_min_lowercase_letters": "1",
+          "password_min_uppercase_letters": "1",
+          "password_min_digits": "1",
+          "password_min_punctuation": "1",
+          "password_min_whitespace": "0",
+          "service_check_principal_name" : "${CLUSTER_NAME}-service_check",
+          "case_insensitive_username_rules" : "false"
+        }
+      }
+    }
+  }
+]
+EOF
+}
+
+# Build KDC Admin Credential Payload
+build_kdc_payload(){
+cat << EOF
+{
+  "session_attributes" : {
+    "kerberos_admin" : {
+      "principal" : "ambari/admin@HADOOP.COM",
+      "password" : "somepassword"
+    }
+  },
+  "Clusters": {
+    "security_type" : "KERBEROS"
+  }
+}
+EOF
+}
+
+# Enable Kerberos
+enable_kerberos(){
+	echo -e "-->Adding KERBEROS Service to cluster"
+	echo -e "-->Adding KERBEROS Service to cluster" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> hdp_deploy_output.log
+	echo -e "-->Adding KERBEROS_CLIENT component to the KERBEROS service"
+	echo -e "-->Adding KERBEROS_CLIENT component to the KERBEROS service" >> hdp_deploy_output.log
+	sleep 1
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS/components/KERBEROS_CLIENT >> hdp_deploy_output.log
+	sleep 1
+	build_kerberos_payload > kpayload.json
+	echo -e "-->Submitting KERBEROS Payload"
+	echo -e "-->Submitting KERBEROS Payload" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @kpayload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> hdp_deploy_output.log
+	echo -e "-->Creating the KERBEROS_CLIENT host components for each cluster host"
+	for cluster_host in `curl -s -k -u ${ambari_login}:${ambari_password} -H "X-Requested-By: ambari" -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts | grep host_name | gawk '{print $3}' | cut -d '"' -f2`;
+	do
+		echo -e "--->Adding ${cluster_host}"
+		echo -e "--->Adding ${cluster_host}" >> hdp_deploy_output.log
+	        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{"host_components" : [{"HostRoles" : {"component_name":"KERBEROS_CLIENT"}}]}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/hosts?Hosts/host_name=${cluster_host} >> hdp_deploy_output.log
+	        sleep 1
+	done
+	echo -e "-->Installing KERBEROS Cluster Service and Components"
+	echo -e "-->Installing KERBEROS Cluster Service and Components" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Install Kerberos Cluster Service"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> hdp_deploy_output.log
+	check_ambari_requests
+	echo -e "-->Stopping all Cluster services"
+	echo -e "-->Stopping all Cluster services" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> hdp_deploy_output.log
+	check_ambari_requests
+	#if [[ "${AMBARI_VERSION:0:3}" > "2.7" ]] || [[ "${AMBARI_VERSION:0:3}" == "2.7" ]]; then
+	#       echo -e "\n`ts` Uploading Kerberos Credentials"
+	#        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : { "principal" : "admin/admin@'$REALM'", "key" : "hadoop", "type" : "temporary" }}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
+	#        sleep 1
+	#fi
+	echo -e "-->Enabling Kerberos"
+	echo -e "-->Enabling Kerberos" >> hdp_deploy_output.log
+	build_kdc_payload > payload.json
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @payload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> hdp_deploy_output.log
+	check_ambari_requests
+	echo -e "->Starting Cluster Services"
+	echo -e "->Starting Cluster Services" >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> hdp_deploy_output.log
+	check_ambari_requests
 }
 
 ##
@@ -580,12 +728,13 @@ while [ $ambari_up = "0" ]; do
 		ambari_up=1
 		continue;
 	else
-		echo -ne "-> Ambari Server Not Detected... Retrying"
+		echo -ne "-> Ambari Server Not Detected... Retrying\r"
 		sleep 5
 	fi
 done;
 start_time=`date +%Y-%m%d-%H:%M:%S`
 start_time_s=`date +%H:%M:%S`
+echo -e "$start_time" > hdp_deploy_output.log
 # Cluster Setup
 echo -e "-> Building HDP Configuration"
 hdp_build_config
@@ -602,39 +751,17 @@ sleep 3
 # Setup new admin account
 echo -e "-> Creating new Admin account: ${ambari_login}"
 new_admin > ${ambari_login}.json
-curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users > /dev/null
+curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> hdp_deploy_output.log
 rm -f new_admin.json
 sleep 3
 # reset default  admin account to random password
 echo -e "-> Reset default admin account to random password"
 admin_password=`create_random_password`
 admin_password_json > admin.json
-curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users > /dev/null
+curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> hdp_deploy_output.log
 rm -f admin.json
-sleep 5 
-completed_requests="0"
-echo -e "Checking Ambari requests..."
-total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
-echo -e "$total_requests requests found."
-if [ $total_requests = "0" ]; then 
-	echo -e "Failed to find requests... heck Ambari manually for cluster status."
-	echo -e "Ambari Login: https://${ambari_ip}:9443"
-	exit
-fi
-spin="+"
-while [ $completed_requests != $total_requests ]; do 
-	completed_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "COMPLETED" | wc -l`
-	pending_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "PENDING" | wc -l`
-	in_progress_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "IN_PROGRESS" | wc -l`
-	total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u admin:admin -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
-	echo -ne " [${spin}] Cluster Build Status: $pending_requests pending, $in_progress_requests in progress, ${completed_requests}/${total_requests} complete.\r"
-	case $spin in
-		+) spin="x";;
-		x) spin="+";;
-	esac
-	sleep 5
-done;
-echo -e "\n"
+check_ambari_requests
+enable_kerberos
 end_time=`date +%Y-%m%d-%H:%M:%S`
 end_time_s=`date +%H:%M:%S` 
 echo -e "\t--CLUSTER SETUP COMPLETE--"
