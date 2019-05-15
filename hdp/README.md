@@ -1,5 +1,5 @@
-# Hortonworks HDP on OCI automation with Terraform
-Included here is a Terraform template for deploying a fully configured HDP cluster on OCI..
+# hdp
+This is a Terraform template for deploying a fully configured HDP cluster on OCI..
 
 |             | Worker Nodes   | Bastion Instance | Utility and Master Instances |
 |-------------|----------------|------------------|------------------------------|
