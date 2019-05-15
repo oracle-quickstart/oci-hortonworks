@@ -586,20 +586,22 @@ check_ambari_requests(){
 	        echo -e "Ambari Login: https://${ambari_ip}:9443"
 	        exit
 	fi
-	spin="+"
+	req_start=`date +%H:%M:%S`
 	while [ $completed_requests != $total_requests ]; do
         	completed_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "COMPLETED" | wc -l`
 	        pending_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "PENDING" | wc -l`
 	        in_progress_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | grep "IN_PROGRESS" | wc -l`
 	        total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
-	        echo -ne " [${spin}] Cluster Action Status: $pending_requests pending, $in_progress_requests in progress, ${completed_requests}/${total_requests} complete.\r"
-	        case $spin in
-        	        +) spin="x";;
-	                x) spin="+";;
-	        esac
-	        sleep 5
+		req_now=`date +%H:%M:%S`
+		req_now_s=`date +%s -d ${req_now}`
+		req_start_s=`date +%s -d ${req_start}`
+		req_diff=`expr ${req_now_s} - ${req_start_s}`	
+	        echo -ne " [`date +%H:%M:%S -ud @${req_diff}`] Cluster Action Status: $pending_requests pending, $in_progress_requests in progress, ${completed_requests}/${total_requests} complete.\r"
+	    	sleep 5
+		
+		
 	done;
-	echo -e "\n"
+	echo -e "->Action Complete."
 }
 
 # Build Kerberos Service Payload
