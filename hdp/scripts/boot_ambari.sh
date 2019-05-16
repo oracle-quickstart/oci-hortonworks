@@ -7,6 +7,8 @@ mysql_db_password="somepassword"
 ambari_user="ambari"
 ambari_db_password="somepassword"
 ambari_version="2.6.2.0"
+ranger_user="rangeradmin"
+ranger_db_password="somepassword"
 #
 
 LOG_FILE="/var/log/hortonworks-OCI-initialize.log"
@@ -24,6 +26,10 @@ CREATE USER '${ambari_user}'@'localhost' IDENTIFIED BY '${ambari_db_password}';
 GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'localhost';
 CREATE USER '${ambari_user}'@'${utilfqdn}' IDENTIFIED BY '${ambari_db_password}';
 GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'${utilfqdn}';
+CREATE DATABASE ranger;
+GRANT ALL PRIVILEGES ON ranger.* to '${ranger_user}'@'%' identified by '${ranger_db_password}';
+GRANT ALL PRIVILEGES ON ranger.* to '${ranger_user}'@'$utilfqdn' with grant option;
+SET GLOBAL log_bin_trust_function_creators = 1;
 FLUSH PRIVILEGES;
 EOF
 }

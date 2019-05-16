@@ -405,6 +405,9 @@ cat << EOF
 			        "dfs.namenode.rpc-address.${CLUSTER_NAME}.nn1" : "%HOSTGROUP::master1%:8020",
 			        "dfs.namenode.rpc-address.${CLUSTER_NAME}.nn2" : "%HOSTGROUP::master2%:8020",
 			        "dfs.namenode.shared.edits.dir" : "qjournal://%HOSTGROUP::master1%:8485;%HOSTGROUP::master2%:8485/${CLUSTER_NAME}",
+				"dfs.namenode.name.dir" : "/data0/hdfs/namenode",
+				"dfs.namenode.checkpoint.dir" : "/data0/hdfs/namesecondary",
+				"dfs.journalnode.edits.dir" : "/data0/hdfs/journalnode",
 			        "dfs.nameservices" : "${CLUSTER_NAME}",
 				"dfs.datanode.data.dir" : ${dfs}
     			}}
