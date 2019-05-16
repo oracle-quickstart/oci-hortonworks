@@ -1,5 +1,14 @@
 #!/bin/bash
+#Extract Utility server from metadata
 utilfqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
+
+# Change this prior to deployment
+mysql_db_password="somepassword"
+ambari_user="ambari"
+ambari_db_password="somepassword"
+ambari_version="2.6.2.0"
+hdf_ambari_mpack_url="http://public-repo-1.hortonworks.com/HDF/centos7/3.x/updates/3.1.0.0/tars/hdf_ambari_mp/hdf-ambari-mpack-3.1.0.0-564.tar.gz"
+#
 
 LOG_FILE="/var/log/hortonworks-OCI-initialize.log"
 
@@ -8,18 +17,99 @@ log() {
   echo "$(date) [${EXECNAME}]: $*" >> "${LOG_FILE}"
 }
 
-EXECNAME="Ambari Agent"
+gen_mysql () {
+cat << EOF 
+CREATE USER '${ambari_user}'@'%' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'%';
+CREATE USER '${ambari_user}'@'localhost' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'localhost';
+CREATE USER '${ambari_user}'@'${utilfqdn}' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'${utilfqdn}';
+CREATE DATABASE registry DEFAULT CHARACTER SET utf8; CREATE DATABASE streamline DEFAULT CHARACTER SET utf8;
+CREATE USER 'registry'@'%' IDENTIFIED BY '${ambari_db_password}'; CREATE USER 'streamline'@'%' IDENTIFIED BY '${ambari_db_password}';
+GRANT ALL PRIVILEGES ON registry.* TO 'registry'@'%' WITH GRANT OPTION ; GRANT ALL PRIVILEGES ON streamline.* TO 'streamline'@'%' WITH GRANT OPTION ;
+commit;
+FLUSH PRIVILEGES;
+EOF
+}
+
+EXECNAME="Ambari Certificate"
+mkdir -p /etc/ambari-server/certs
+cd /etc/ambari-server/certs
+log "->Generate & Deploy"
+openssl genrsa -out ${utilfqdn}.key 2048
+# This should be customized to your organization
+openssl req -new -key ${utilfqdn}.key -out ${utilfqdn}.csr -subj "/C=US/ST=Washington/L=Seattle/O=OCI/OU=Hortonworks/CN=${utilfqdn}"
+openssl x509 -req -days 365 -in ${utilfqdn}.csr -signkey ${utilfqdn}.key -out ${utilfqdn}.crt
+
+EXECNAME="MYSQL Server"
 log "->Install"
+wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+rpm -ivh mysql-community-release-el7-5.noarch.rpm
+yum install mysql-server mysql-connector-java* epel-release -y
+log "->Tuning"
+head -n -6 /etc/my.cnf >> /etc/my.cnf.new
+mv /etc/my.cnf /etc/my.cnf.rpminstall
+mv /etc/my.cnf.new /etc/my.cnf
+echo -e "transaction_isolation = READ-COMMITTED\n\
+read_buffer_size = 2M\n\
+read_rnd_buffer_size = 16M\n\
+sort_buffer_size = 8M\n\
+join_buffer_size = 8M\n\
+query_cache_size = 64M\n\
+query_cache_limit = 8M\n\
+query_cache_type = 1\n\
+thread_stack = 256K\n\
+thread_cache_size = 64\n\
+max_connections = 700\n\
+key_buffer_size = 32M\n\
+max_allowed_packet = 32M\n\
+log_bin=/var/lib/mysql/mysql_binary_log\n\
+server_id=1\n\
+binlog_format = mixed\n\
+\n\
+# InnoDB Settings\n\
+innodb_file_per_table = 1\n\
+innodb_flush_log_at_trx_commit = 2\n\
+innodb_log_buffer_size = 64M\n\
+innodb_thread_concurrency = 8\n\
+innodb_buffer_pool_size = 4G\n\
+innodb_flush_method = O_DIRECT\n\
+innodb_log_file_size = 512M\n\
+\n\
+[mysqld_safe]\n\
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid \n\
+\n\
+sql_mode=STRICT_ALL_TABLES\n\
+" >> /etc/my.cnf
+log "-->Database setup"
+systemctl enable mysqld
+systemctl start mysqld
+gen_mysql > mysql-setup.sql
+#execute sql file
+mysql -u root < mysql-setup.sql
+#change Mysql password to DB Password
+mysqladmin -u root password ${mysql_db_password}
 
+EXECNAME="Ambari Server & Agent"
+log "->Install"
 # Ambari Agent Install
-ambari_version="2.6.2.0"
-
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
-yum install ambari-agent -y
-wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
-wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
+yum install ambari-server ambari-agent -y
+# Bootstrap MySQL for Ambari
+mysql -u ${ambari_user} -p${ambari_db_password} -e 'CREATE DATABASE ambari'
+mysql -u ${ambari_user} -p${ambari_db_password} -D ambari < /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql
+ambari-server setup -s --databasehost=${utilfqdn} --database=mysql --databaseport=3306 --databasename=ambari --databaseusername=${ambari_user} --databasepassword=${ambari_db_password}
+ambari-server setup  --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+ambari-server setup-security --security-option=setup-https --api-ssl=true --api-ssl-port=8443 --import-cert-path=/etc/ambari-server/certs/${utilfqdn}.crt --import-key-path=/etc/ambari-server/certs/${utilfqdn}.key --pem-password=
+sed -i 's/client.api.ssl.port=8443/client.api.ssl.port=9443/g' /etc/ambari-server/conf/ambari.properties
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
 unzip -o -j -q jce_policy-8.zip -d /usr/jdk64/jdk1.8.0_*/jre/lib/security/
+ambari-server install-mpack --mpack=${hdf_ambari_mpack_url} --verbose
+service ambari-server start
+wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
+wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 
 # Modify /etc/ambari-agent/conf/ambari-agent.ini
 sed -i "s/localhost/${utilfqdn}/g" /etc/ambari-agent/conf/ambari-agent.ini
@@ -42,11 +132,15 @@ log "->INSTALL"
 ## Install Java & Kerberos client
 yum install java-1.8.0-openjdk.x86_64 krb5-workstation -y
 
+## KERBEROS INSTALL
 EXECNAME="KERBEROS"
-log "->krb5.conf"
-## Configure krb5.conf
-kdc_server=${utilfqdn}
-kdc_fqdn=${utilfqdn}
+log "-> INSTALL"
+
+yum -y install krb5-server krb5-libs krb5-workstation
+KERBEROS_PASSWORD="SOMEPASSWORD"
+AMBARI_USER_PASSWORD="somepassword"
+kdc_server=$(hostname)
+kdc_fqdn=`host $kdc_server | gawk '{print $1}'`
 realm="hadoop.com"
 REALM="HADOOP.COM"
 log "-> CONFIG"
@@ -63,7 +157,7 @@ includedir /etc/krb5.conf.d/
  ticket_lifetime = 24h
  renew_lifetime = 7d  
  forwardable = true
- udp_preference_limit = 1000000
+ udp_preference_limit = 1000000 
  default_tkt_enctypes = rc4-hmac 
  default_tgs_enctypes = rc4-hmac
  permitted_enctypes = rc4-hmac 
@@ -106,6 +200,45 @@ includedir /etc/krb5.conf.d/
     default = FILE:/var/log/krb5lib.log
 EOF
 
+
+rm -f /var/kerberos/krb5kdc/kdc.conf
+cat > /var/kerberos/krb5kdc/kdc.conf << EOF
+default_realm = ${REALM}
+
+[kdcdefaults]
+    v4_mode = nopreauth
+    kdc_ports = 0
+
+[realms]
+    ${REALM} = {
+        kdc_ports = 88
+        admin_keytab = /var/kerberos/krb5kdc/kadm5.keytab
+        database_name = /var/kerberos/krb5kdc/principal
+        acl_file = /var/kerberos/krb5kdc/kadm5.acl
+        key_stash_file = /var/kerberos/krb5kdc/stash
+        max_life = 10h 0m 0s
+        max_renewable_life = 7d 0h 0m 0s
+        master_key_type = des3-hmac-sha1
+        supported_enctypes = rc4-hmac:normal 
+        default_principal_flags = +preauth
+    }
+EOF
+
+rm -f /var/kerberos/krb5kdc/kadm5.acl
+cat > /var/kerberos/krb5kdc/kadm5.acl << EOF
+*/admin@${REALM}    *
+ambari/admin@${REALM}   *
+EOF
+
+kdb5_util create -r ${REALM} -s -P ${KERBEROS_PASSWORD}
+
+echo -e "addprinc root/admin\n${KERBEROS_PASSWORD}\n${KERBEROS_PASSWORD}\naddprinc ambari/admin\n${AMBARI_USER_PASSWORD}\n${AMBARI_USER_PASSWORD}\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin\nktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/changepw\nexit\n" | kadmin.local -r ${REALM}
+log "-> START"
+systemctl start krb5kdc.service
+systemctl start kadmin.service
+systemctl enable krb5kdc.service
+systemctl enable kadmin.service
+
 EXECNAME="TUNING"
 log "->OS"
 ## Disable Transparent Huge Pages
@@ -146,8 +279,6 @@ ulimit -n 262144
 log "->FirewallD"
 systemctl stop firewalld
 systemctl disable firewalld
-
-## Post Tuning Execution Below
 
 #
 # DISK SETUP
@@ -246,15 +377,15 @@ while [ "$detection_flag" = "0" ]; do
                         fi
                 fi
         done;
-	if [ "$volume_count" = "0" ]; then 
-		if [ "$volume_count" = "$sanity_volume_count" ]; then 
-			log "-- $volume_count Block Volumes found, done."
-			detection_flag="1"
-		else
-			log "-- Sanity Check Failed - $sanity_volume_count Volumes found, $volume_count on first run.  Re-running --"
-			sleep 30
-			continue
-		fi
+	if [ "$volume_count" = "0" ]; then
+                if [ "$volume_count" = "$sanity_volume_count" ]; then
+                        log "-- $volume_count Block Volumes found, done."
+                        detection_flag="1"
+                else
+                        log "-- Sanity Check Failed - $sanity_volume_count Volumes found, $volume_count on first run.  Re-running --"
+                        sleep 30
+                        continue
+                fi
 	elif [ "$volume_count" != "$sanity_volume_count" ]; then
 		log "-- Sanity Check Failed - $sanity_volume_count Volumes found, $volume_count on first run.  Re-running --"
 		sleep 15

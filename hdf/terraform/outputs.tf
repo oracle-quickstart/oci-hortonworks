@@ -1,17 +1,2 @@
-# Output the private and public IPs of the instance
-
-output "INFO - BastionPublicIP" {
-  value = ["${data.oci_core_vnic.bastion_vnic.public_ip_address}"]
-}
-
-output "INFO - UtilityPublicIP" {
-  value = ["${data.oci_core_vnic.utility_node_vnic.public_ip_address}"]
-}
-
-output "2 - Ambari Login will be available later in setup process" {
-  value = ["http://${data.oci_core_vnic.utility_node_vnic.public_ip_address}:8080"]
-}
-
-output "1 - Login to Bastion SSH" { 
-  value = ["ssh -i ~/.ssh/id_rsa opc@${data.oci_core_vnic.bastion_vnic.public_ip_address}"]
-}
+output "AMBARI URL" { value = "https://${module.utility.public-ip}:9443/" }
+output "DEPLOYMENT COMMAND" { value = "../scripts/hdf_deploy.sh ${module.utility.public-ip} ${var.availability_domain} ${var.master_node_count} ${var.master_instance_shape}" }

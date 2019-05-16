@@ -4,16 +4,15 @@
 # Instructions on that are here: https://github.com/oci-quickstart/oci-prerequisites
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "compartment_ocid" {}
-
-# Required by the OCI Provider
-
-variable "tenancy_ocid" {}
-variable "user_ocid" {}
-variable "fingerprint" {}
 variable "region" {}
+variable "compartment_ocid" {}
+variable "private_key_path" {}
 variable "ssh_public_key" {}
 variable "ssh_private_key" {}
+variable "instances" {}
+variable "subnet_id" {}
+variable "user_data" {}
+variable "ambari_server" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
@@ -27,33 +26,26 @@ variable "availability_domain" {
 # Number of Master Nodes in the Cluster
 
 variable "master_node_count" {
-  default = "3"
+  default = "2"
 }
 
+# Size for NameNode and SecondaryNameNode data volume (Journal Data)
+
+variable "nn_volume_size_in_gbs" {
+  default = "500"
+}
 
 # 
 # Set Cluster Shapes in this section
 #
 
-variable "bastion_instance_shape" {
-  default = "VM.Standard2.4"
-}
-
 variable "master_instance_shape" {
-  default = "VM.Standard2.8"
-}
-
-variable "utility_instance_shape" {
   default = "VM.Standard2.8"
 }
 
 # Path to SSH Key
 
 variable "ssh_keypath" {
-  default = "/home/opc/.ssh/id_rsa"
-}
-
-variable "private_key_path" {
   default = "/home/opc/.ssh/id_rsa"
 }
 
@@ -73,17 +65,6 @@ variable "InstanceImageOCID" {
     uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaaaxnnrqke453ur5katouvfn2i6oweuwpixx6mm5e4nqtci7oztx5a"
     us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaavxqdkuyamlnrdo3q7qa7q3tsd6vnyrxjy3nmdbpv7fs7um53zh5q"
     us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaapxvrtwbpgy3lchk2usn462ekarljwg4zou2acmundxlkzdty4bjq"
-  }
-}
-
-variable "oci_service_gateway" {
-  type = "map"
-  default = {
-    ca-toronto-1 = "all-yyz-services-in-oracle-services-network"
-    eu-frankfurt-1 = "all-fra-services-in-oracle-services-network"
-    uk-london-1 = "all-lhr-services-in-oracle-services-network"
-    us-ashburn-1 = "all-iad-services-in-oracle-services-network"
-    us-phoenix-1 = "all-phx-services-in-oracle-services-network"
   }
 }
 
