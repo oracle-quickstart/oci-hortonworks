@@ -215,6 +215,7 @@ while [ $dc -lt $hdfs_disks ]; do
                 dc=$((dc+1))
 	fi
 done;
+dfs=`echo "$dfs\""`
 }
 
 # Create Cluster hostmap.json
