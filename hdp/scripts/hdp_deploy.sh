@@ -46,12 +46,14 @@ bastionfqdn="hw-bastion.bastion${ad}.hwvcn.oraclevcn.com"
 case $worker_shape in
 	BM.Standard.E2.64)
 	wprocs=64
+	yarn_nodemanager_memory="786432"
         hdfs_disks=${block_disks}
         data_tiering="false"
 	;;
 
 	BM.DenseIO2.52)
 	wprocs=52
+	yarn_nodemanager_memory="786432"	
 	nvme_disks=8
 	hdfs_disks=$((${nvme_disks}+${block_disks}))
 	data_tiering="true"
@@ -59,12 +61,14 @@ case $worker_shape in
 
 	BM.Standard2.52|BM.GPU3.8)
 	wprocs=52
+	yarn_nodemanager_memory="786432"
 	hdfs_disks=${block_disks}
 	data_tiering="false"
 	;;
 
 	BM.HPC2.36)
 	wprocs=36
+	yarn_nodemanager_memory="786432"
 	nvme_disks=1
         hdfs_disks=$((${nvme_disks}+${block_disks}))
 	data_tiering="true"
@@ -72,24 +76,28 @@ case $worker_shape in
 
 	BM.DenseIO1.36)
 	wprocs=36
+	yarn_nodemanager_memory="242688"
 	hdfs_disks=$((9+${block_disks}))
 	data_tiering="true"
 	;;
 
 	BM.Standard1.36)
 	wprocs=36
+	yarn_nodemanager_memory="242688"
 	hdfs_disks=${block_disks}
 	data_tiering="false"
 	;;
 
 	BM.GPU2.2)
 	wprocs=28
+	yarn_nodemanager_memory="114688"
         hdfs_disks=${block_disks}
         data_tiering="false"
         ;;
 
         VM.DenseIO2.24)
 	wprocs=24
+	yarn_nodemanager_memory="308224"
 	nvme_disks=4
         hdfs_disks=$((${nvme_disks}+${block_disks}))
 	data_tiering="true"
@@ -97,12 +105,14 @@ case $worker_shape in
 
 	VM.Standard2.24|VM.GPU3.4)
         wprocs=24
+	yarn_nodemanager_memory="308224"
         hdfs_disks=${block_disks}
         data_tiering="false"
         ;;
 
 	VM.DenseIO2.16)
 	wprocs=16
+	yarn_nodemanager_memory="237568"
 	nvme_disks=2
         hdfs_disks=$((${nvme_disks}+${block_disks}))
 	data_tiering="true"
@@ -110,6 +120,7 @@ case $worker_shape in
 
 	VM.DenseIO1.16)
 	wprocs=16
+	yarn_nodemanager_memory="237568"
 	nvme_disks=4
         hdfs_disks=$((${nvme_disks}+${block_disks}))
         data_tiering="true"
@@ -117,18 +128,29 @@ case $worker_shape in
 
 	VM.Standard2.16|VM.Standard1.16)
 	wprocs=16
+        if [ $worker_shape = "VM.Standard1.16" ]; then
+                yarn_nodemanager_memory="95232"
+        else
+                yarn_nodemanager_memory="237568"
+        fi
         hdfs_disks=${block_disks}
         data_tiering="false"
 	;;
 
 	VM.GPU2.1|VM.GPU3.2)
 	wprocs=12
+	if [ $worker_shape = "VM.GPU2.1" ]; then 
+		yarn_nodemanager_memory="73728"
+	else
+		yarn_nodemanager_memory="184320"
+	fi
 	hdfs_disks=${block_disks}
 	data_tiering="false"
 	;;
 
 	VM.DenseIO2.8)
 	wprocs=8
+	yarn_nodemanager_memory="114688"
 	nvme_disks=1
         hdfs_disks=$((${nvme_disks}+${block_disks}))
 	data_tiering="true"
@@ -136,6 +158,7 @@ case $worker_shape in
 
 	VM.DenseIO1.8)
 	wprocs=8
+	yarn_nodemanager_memory="114688"
 	nvme_disks=2
         hdfs_disks=$((${nvme_disks}+${block_disks}))
         data_tiering="true"
@@ -143,12 +166,18 @@ case $worker_shape in
 
 	VM.Standard2.8|VM.Standard1.8|VM.StandardE2.8)
 	wprocs=8
+	if [ $worker_shape = "VM.Standard1.8" ]; then
+		yarn_nodemanager_memory="37888"
+	else
+		yarn_nodemanager_memory="114688"
+	fi
         hdfs_disks=${block_disks}
         data_tiering="false"
 	;;
 
 	VM.GPU3.1)
 	wprocs=6
+	yarn_nodemanager_memory="92160"
 	hdfs_disks=${block_disks}
 	data_tiering="false"
 	;;
@@ -417,6 +446,8 @@ cat << EOF
 		        	"hadoop.registry.rm.enabled" : "false",
 			        "hadoop.registry.zk.quorum" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.log.server.url" : "http://%HOSTGROUP::master2%:19888/jobhistory/logs",
+				"yarn.nodemanager.resource.cpu-vcores" : "$((wprocs*2))",
+				"yarn.nodemanager.resource.memory-mb" : "${yarn_nodemanager_memory}",
 				"yarn.resourcemanager.address" : "%HOSTGROUP::master2%:8050",
 			        "yarn.resourcemanager.zk-address" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.resourcemanager.admin.address" : "%HOSTGROUP::master2%:8141",
