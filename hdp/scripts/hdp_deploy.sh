@@ -224,27 +224,26 @@ dc=0
 while [ $dc -lt $hdfs_disks ]; do
 	if [ $data_tiering = "false" ]; then 
 		if [ $dc = 0 ]; then
-			dfs=`echo "\"/data${dc}/"`
+			dfs=`echo "/data${dc}/"`
 		elif [ $dc = $((hdfs_disks-1)) ]; then
-			dfs=`echo "$dfs,/data${dc}/\""`
+			dfs=`echo "$dfs,/data${dc}/"`
 		else
 		 	dfs=`echo "$dfs,/data${dc}/"`
 		fi
 		dc=$((dc+1))
 	elif [ $data_tiering = "true" ]; then 
                 if [ $dc = 0 ]; then
-                        dfs=`echo "\"[DISK]/data${dc}/"`
+                        dfs=`echo "[DISK]/data${dc}/"`
 		elif [ $dc -lt $nvme_disks ]; then
 			dfs=`echo "$dfs,[DISK]/data${dc}/"`
                 elif [ $dc = $((hdfs_disks-1)) ]; then
-                        dfs=`echo "$dfs,[ARCHIVE]/data${dc}/\""`
+                        dfs=`echo "$dfs,[ARCHIVE]/data${dc}/"`
                 else
                         dfs=`echo "$dfs,[ARCHIVE]/data${dc}/"`
                 fi
                 dc=$((dc+1))
 	fi
 done;
-dfs=`echo "$dfs\""`
 }
 
 # Create Cluster hostmap.json
@@ -438,12 +437,12 @@ cat << EOF
 				"dfs.namenode.checkpoint.dir" : "/data0/hdfs/namesecondary",
 				"dfs.journalnode.edits.dir" : "/data0/hdfs/journalnode",
 			        "dfs.nameservices" : "${CLUSTER_NAME}",
-				"dfs.datanode.data.dir" : ${dfs}
+				"dfs.datanode.data.dir" : "${dfs}"
     			}}
   		},
 		{ "yarn-site" : {
 		        "properties" : {
-		        	"hadoop.registry.rm.enabled" : "false",
+		        	"hadoop.registry.rm.enabled" : "true",
 			        "hadoop.registry.zk.quorum" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.log.server.url" : "http://%HOSTGROUP::master2%:19888/jobhistory/logs",
 				"yarn.nodemanager.resource.cpu-vcores" : "$((wprocs*2))",
@@ -458,6 +457,10 @@ cat << EOF
 				"yarn.resourcemanager.hostname" : "%HOSTGROUP::master2%",
 			        "yarn.resourcemanager.hostname.rm1" : "%HOSTGROUP::master2%",
 				"yarn.resourcemanager.hostname.rm2" : "%HOSTGROUP::master1%",
+				"yarn.resourcemanager.webapp.address.rm1" : "%HOSTGROUP::master2%:8088",
+				"yarn.resourcemanager.webapp.address.rm2" : "%HOSTGROUP::master1%:8088",
+				"yarn.resourcemanager.webapp.https.address.rm1" : "%HOSTGROUP::master2%:8090",
+				"yarn.resourcemanager.webapp.https.address.rm2" : "%HOSTGROUP::master1%:8090",
 			        "yarn.resourcemanager.recovery.enabled" : "true",
 			        "yarn.resourcemanager.resource-tracker.address" : "%HOSTGROUP::master2%:8025",
 			        "yarn.resourcemanager.scheduler.address" : "%HOSTGROUP::master2%:8030",
