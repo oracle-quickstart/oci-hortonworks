@@ -21,7 +21,7 @@ fi
 # Set some Global Variables first
 
 ## Ambari and HDP Version
-ambari_version="2.6.2.0"
+ambari_version="2.6.2.2"
 hdf_version="3.1.0.0"
 
 ## Cluster Info 

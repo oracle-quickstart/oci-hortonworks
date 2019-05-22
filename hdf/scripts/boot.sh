@@ -12,7 +12,7 @@ EXECNAME="Ambari Agent"
 log "->Install"
 
 # Ambari Agent Install
-ambari_version="2.6.2.0"
+ambari_version="2.6.2.2"
 
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-agent -y

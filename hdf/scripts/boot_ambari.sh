@@ -6,7 +6,7 @@ utilfqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
 mysql_db_password="somepassword"
 ambari_user="ambari"
 ambari_db_password="somepassword"
-ambari_version="2.6.2.0"
+ambari_version="2.6.2.2"
 hdf_ambari_mpack_url="http://public-repo-1.hortonworks.com/HDF/centos7/3.x/updates/3.1.0.0/tars/hdf_ambari_mp/hdf-ambari-mpack-3.1.0.0-564.tar.gz"
 #
 

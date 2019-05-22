@@ -57,6 +57,7 @@ Deployment customization is done by modifying a few files:
 	ambari_version
 	hdp_version
 	hdp_utils_version
+
 ## Deployment
 
 Deploy using standard Terraform commands

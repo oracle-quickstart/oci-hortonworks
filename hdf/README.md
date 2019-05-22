@@ -13,15 +13,46 @@ First off you'll need to do some pre deploy setup.  That's all detailed [here](h
 
 ## Scaling
 
-Scale the number of supervisors by incrementing the value of MasterNodeCount in "variables.tf" prior to deployment. 
+Scale the number of supervisors by incrementing the value of master_node_count in [terraform/variables.tf](terraform/variables.tf) prior to deployment. 
 
-	variable "MasterNodeCount" { default = "3" }
+	variable "master_node_count" { default = "3" }
 
 By default this deploys a 3 node cluster.
 
-## Password & User Details
+## Deployment Customization
 
-Modify the scripts/ambari_setup.sh - This is also where you can customize the HDF & Ambari versions used, along with the Cluster Name.  Default ambari login is "admin/admin" - Change this after logging into Ambari for the first time.
+Deployment customization is done by modifying a few files:
+* [scripts/hdf_deploy.sh](scripts/hdf_deploy.sh) Cluster Deployment, customize Ambari admin credentials, HDF version, Cluster Name, Configuration and Cluster Topology.  Configuration and Topology customization requires knowledge of [Ambari Blueprints](https://cwiki.apache.org/confluence/display/AMBARI/Blueprints).  YAML can be modified/inserted into the appropriate section of this script to allow for custom deployment.
+
+        hdf_version
+        CLUSTER_NAME
+        ambari_login
+        ambari_password
+	nifi_password
+
+* [scripts/boot.sh](scripts/boot.sh) CloudInit boot script for instances, customize Ambari Agent version.
+
+        ambari_version
+
+* [scripts/boot_ambari.sh](scripts/boot_ambari.sh) CloudInit boot script for Ambari Utility server.  Customize Ambari version.
+
+        ambari_version
+
+
+## MySQL Server Setup
+
+MySQL Server is installed on the Ambari host for use with Ambari and Cluster Metadata.   The default database passwords are controlled in [scripts/boot_ambari.sh](scripts/boot_ambari.sh).  It is recommended to change these default values prior to deployment:
+
+        mysql_db_password="somepassword"
+        ambari_db_password="somepassword"
+
+The "ambari_user" variable is the Database user for Ambari.
+
+## Cluster Security
+
+This template also includes Kerberos Secure Cluster installation by default.   This uses a local KDC on the Utility host.   Administration of Kerberos principals can be done on this host using "kadmin.local" as root user.   Principals are in the format of "<user>/<host_fqdn>@HADOOP.COM".  An admin principal for use with Ambari is also setup as part of deployment, "ambari/admin@HADOOP.COM".
+
+When using secure cluster you should not over-write any of the default principals which are setup by Ambari.
 
 ## Deployment
 
@@ -33,12 +64,9 @@ Deploy using standard Terraform commands
 
 ## Post Deployment
 
-Post deployment is automated using a scripted process that uses Bash to generate Ambari Blueprints, then submit via Ambari API. Log into the Bastion host after Terraform completes, then run the following commands to watch installation progress.  The public IP will output as a result of the Terraform completion:
+Terraform output will show a script command to deploy the cluster using Ambari Blueprints and Ambari API calls. This is done by building JSON files for host mapping and cluster topology, and submitting them to Ambari API using curl.  The entire process is automated and will give status output as it progresses through the deployment steps.
 
-        ssh -i ~/.ssh/id_rsa opc@<public_ip_of_bastion>
-        sudo screen -r
-
-Ambari is setup as part of this process and will become available just prior to cluster deployment.   Cluster deployment can be monitored in Ambari once it is available, the Ambari URL is presented as part of the Terraform output.
+        ../scripts/hdf_deploy.sh <ambari_server_ip> <availability_domain> <number_of_masters> <master_shape>
 
 ## Security and Post-Deployment Auditing
 
