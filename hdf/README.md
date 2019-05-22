@@ -50,7 +50,7 @@ The "ambari_user" variable is the Database user for Ambari.
 
 ## Cluster Security
 
-This template also includes Kerberos Secure Cluster installation by default.   This uses a local KDC on the Utility host.   Administration of Kerberos principals can be done on this host using "kadmin.local" as root user.   Principals are in the format of "<user>/<host_fqdn>@HADOOP.COM".  An admin principal for use with Ambari is also setup as part of deployment, "ambari/admin@HADOOP.COM".
+This template also includes Kerberos Secure Cluster installation by default.   This uses a local KDC on the Utility host.   Administration of Kerberos principals can be done on this host using "kadmin.local" as root user.   Principals are in the format of "user/<host_fqdn>@HADOOP.COM".  An admin principal for use with Ambari is also setup as part of deployment, "ambari/admin@HADOOP.COM".
 
 When using secure cluster you should not over-write any of the default principals which are setup by Ambari.
 
