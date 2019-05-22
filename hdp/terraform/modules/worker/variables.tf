@@ -87,6 +87,45 @@ variable "ssh_keypath" {
 # You probably don't need to change these.
 # ---------------------------------------------------------------------------------------------------------------------
 
+// Volume Mapping - used to map Worker Block Volumes consistently to the OS
+variable "data_volume_attachment_device" {
+  type = "map"
+  default = {
+    "0" = "/dev/oracleoci/oraclevdb"
+    "1" = "/dev/oracleoci/oraclevdc"
+    "2" = "/dev/oracleoci/oraclevdd"
+    "3" = "/dev/oracleoci/oraclevde"
+    "4" = "/dev/oracleoci/oraclevdf"
+    "5" = "/dev/oracleoci/oraclevdg"
+    "6" = "/dev/oracleoci/oraclevdh"
+    "7" = "/dev/oracleoci/oraclevdi"
+    "8" = "/dev/oracleoci/oraclevdj"
+    "9" = "/dev/oracleoci/oraclevdk"
+    "10" = "/dev/oracleoci/oraclevdl"
+    "11" = "/dev/oracleoci/oraclevdm"
+    "12" = "/dev/oracleoci/oraclevdn"
+    "13" = "/dev/oracleoci/oraclevdo"
+    "14" = "/dev/oracleoci/oraclevdp" 
+    "15" = "/dev/oracleoci/oraclevdq"
+    "16" = "/dev/oracleoci/oraclevdr"
+    "17" = "/dev/oracleoci/oraclevds"
+    "18" = "/dev/oracleoci/oraclevdt"
+    "19" = "/dev/oracleoci/oraclevdu"
+    "20" = "/dev/oracleoci/oraclevdv"
+    "21" = "/dev/oracleoci/oraclevdw"
+    "22" = "/dev/oracleoci/oraclevdx"
+    "23" = "/dev/oracleoci/oraclevdy"
+    "24" = "/dev/oracleoci/oraclevdz"
+    "25" = "/dev/oracleoci/oraclevdab"
+    "26" = "/dev/oracleoci/oraclevdac" 
+    "27" = "/dev/oracleoci/oraclevdad"
+    "28" = "/dev/oracleoci/oraclevdae"
+    "29" = "/dev/oracleoci/oraclevdaf"
+    "30" = "/dev/oracleoci/oraclevdag"
+    "31" = "/dev/oracleoci/oraclevdah"
+  }
+}
+
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
 // Oracle-provided image "Oracle-Linux-7.6-2019.03.22-1"
 // Kernel Version: 4.14.35-1844.3.2.el7uek.x86_64

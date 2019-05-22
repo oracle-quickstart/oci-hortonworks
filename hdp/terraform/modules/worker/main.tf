@@ -40,5 +40,6 @@ resource "oci_core_volume_attachment" "WorkerDataAttachment" {
   compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index / (ceil(((var.hdfs_usable_in_gbs*var.replication_factor)/var.data_blocksize_in_gbs)/var.instances))]}"
   volume_id       = "${oci_core_volume.WorkerDataVolume.*.id[count.index]}"
+  device = "${var.data_volume_attachment_device[count.index%(ceil(((var.hdfs_usable_in_gbs*var.replication_factor)/var.data_blocksize_in_gbs)/var.instances))]}"
 }
 
