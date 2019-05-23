@@ -37,10 +37,17 @@ When using DenseIO local storage only, set this value to "0" to remove Block Vol
 
 ## Deployment Customization
 
+Version 3.x versus 2.x deployment is controlled using the following variables:
+
+	hdp_version
+	ambari_version
+
+Refer to the [Hortonworks Support Matrix](https://supportmatrix.hortonworks.com/) for version dependencies between platform components.
+
 Deployment customization is done by modifying a few files:
 * [scripts/hdp_deploy.sh](scripts/hdp_deploy.sh) Cluster Deployment, customize Ambari admin credentials, HDP version, Cluster Name, Configuration and Cluster Topology.  Configuration and Topology customization requires knowledge of [Ambari Blueprints](https://cwiki.apache.org/confluence/display/AMBARI/Blueprints).  YAML can be modified/inserted into the appropriate section of this script to allow for custom deployment.
 	
-	HDP_version
+	hdp_version
 	UTILS_version
 	CLUSTER_NAME
 	ambari_login
