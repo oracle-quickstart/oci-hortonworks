@@ -24,7 +24,8 @@ fi
 # Set some Global Variables first
 
 ## HDP Version - Modify these to install specific version
-hdp_version="2.6.5.0"
+# HDP 3.1.0.0 - 2.6.5.0
+hdp_version="3.1.0.0"
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1,2`
 UTILS_version="1.1.0.22"
 
@@ -206,7 +207,7 @@ if [ $hdp_release = "2" ]; then
 	master2_opts='{ "name": "WEBHCAT_SERVER" },
 				{ "name": "ZOOKEEPER_CLIENT" }],'
 else
-	master3_opts='{ "name": "KNOX_GATEWAY" },'
+	master3_opts='{ "name": "KNOX_GATEWAY" }],'
 	bastion_opts='{ "name": "PIG" }],'
 	master2_opts='{ "name": "HIVE_CLIENT" },
 				{ "name": "HBASE_CLIENT" },
