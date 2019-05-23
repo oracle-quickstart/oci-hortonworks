@@ -25,7 +25,7 @@ fi
 
 ## HDP Version - Modify these to install specific version
 # HDP 3.1.0.0 - 2.6.5.0
-hdp_version="3.1.0.0"
+hdp_version="2.6.5.0"
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1,2`
 UTILS_version="1.1.0.22"
 
