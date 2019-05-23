@@ -8,8 +8,12 @@ log() {
   echo "$(date) [${EXECNAME}]: $*" >> "${LOG_FILE}"
 }
 
-# Ambari Agent Install
+# Ambari Agent Install - set version to match Ambari Server version
+# HDP 3.1.0.0 = Ambari 2.7.3.0
+# HDP 2.6.5.0 = Ambari 2.6.2.2
 ambari_version="2.6.2.2"
+hdp_version="2.6.5.0"
+hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
 
 EXECNAME="TUNING"
 log "->Start"
@@ -136,7 +140,7 @@ log "->Install"
 
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-agent -y >> ${LOG_FILE}
-wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.4.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
+wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/${hdp_major_version}.x/updates/${hdp_version}/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
 unzip -o -j -q jce_policy-8.zip -d /usr/jdk64/jdk1.8.0_*/jre/lib/security/
@@ -157,7 +161,7 @@ unzip oci-hdfs.zip
 javaver=`alternatives --list | grep ^java`
 javapath=`echo $javaver | gawk '{print $3}'| cut -d '/' -f 1-6`
 echo 'java.security.Security.setProperty(\"networkaddress.cache.ttl\" , \"60\");' >>  $javapath/lib/security/java.security
-cp lib/*.jar /usr/hdp/2.6.5.*/hadoop-mapreduce/lib/ 
+cp lib/*.jar /usr/hdp/${hdp_major_version}.*/hadoop-mapreduce/lib/ 
 cd ~
 
 ## Post Tuning Execution Below

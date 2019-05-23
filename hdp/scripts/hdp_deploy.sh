@@ -24,7 +24,8 @@ fi
 # Set some Global Variables first
 
 ## HDP Version - Modify these to install specific version
-HDP_version="2.6.5.0"
+hdp_version="2.6.5.0"
+hdp_major_version=`echo $hdp_version | cut -d '.' -f 1,2`
 UTILS_version="1.1.0.22"
 
 ## Cluster Info 
@@ -188,6 +189,29 @@ case $worker_shape in
 	;;
 
 esac	
+
+## Major Version Topology Mapping - Accounts for variances in topology requirements between 2.x and 3.x Clusters
+
+hdp_release=`echo $hdp_version | cut -d '.' -f 1`
+if [ $hdp_release = "2" ]; then
+	master3_opts='{ "name": "SPARK_JOBHISTORYSERVER" },
+				{ "name": "FALCON_SERVER" },
+				{ "name": "KNOX_GATEWAY" }],'
+	bastion_opts='{ "name": "SPARK_CLIENT" },
+				{ "name": "HBASE_CLIENT" },
+				{ "name": "FALCON_CLIENT" },
+				{ "name": "TEZ_CLIENT" },
+				{ "name": "HCAT" },
+				{ "name": "PIG" }],'
+	master2_opts='{ "name": "WEBHCAT_SERVER" },
+				{ "name": "ZOOKEEPER_CLIENT" }],'
+else
+	master3_opts='{ "name": "KNOX_GATEWAY" },'
+	bastion_opts='{ "name": "PIG" }],'
+	master2_opts='{ "name": "HIVE_CLIENT" },
+				{ "name": "HBASE_CLIENT" },
+				{ "name": "ZOOKEEPER_CLIENT" }],'
+fi
 	
 ##
 ## Functions
@@ -482,9 +506,7 @@ cat << EOF
                                 { "name": "YARN_CLIENT" },
                                 { "name": "MAPREDUCE2_CLIENT" },
                                 { "name": "ZOOKEEPER_CLIENT" },
-				{ "name": "SPARK_JOBHISTORYSERVER" },
-				{ "name": "KNOX_GATEWAY" },
-				{ "name": "FALCON_SERVER" }],
+				${master3_opts}
                         "cardinality": 1 },
                         {"name": "bastion",
                         "components": [
@@ -494,13 +516,8 @@ cat << EOF
                                 { "name": "MAPREDUCE2_CLIENT" },
                                 { "name": "ZOOKEEPER_CLIENT" },
 				{ "name": "OOZIE_CLIENT" },
-				{ "name": "SPARK_CLIENT" },
-				{ "name": "HBASE_CLIENT" },
-				{ "name": "FALCON_CLIENT" },
-				{ "name": "TEZ_CLIENT" },
 				{ "name": "SQOOP" },
-				{ "name": "HCAT" },
-				{ "name": "PIG" }],
+				${bastion_opts}
                         "cardinality": 1 },
 			{"name": "master1",
 			"components": [
@@ -531,8 +548,7 @@ cat << EOF
 				{ "name": "HDFS_CLIENT" },
 				{ "name": "YARN_CLIENT" },
 				{ "name": "MAPREDUCE2_CLIENT" },
-				{ "name": "ZOOKEEPER_CLIENT" },
-				{ "name": "WEBHCAT_SERVER" }],
+				${master2_opts}
 			"cardinality": 1 },
 			{ "name": "datanode",
 			"components": [
@@ -546,7 +562,7 @@ cat << EOF
 		"Blueprints": {
 			"blueprint_name": "${CLUSTER_NAME}",
 			"stack_name": "HDP",
-			"stack_version": "2.6",
+			"stack_version": "${hdp_major_version}",
 			"security": { "type": "NONE" }
 			}
 		}
@@ -559,7 +575,7 @@ cat << EOF
     {
     "Repositories" : {
        "repo_name" : "HDP Public Repo",
-       "base_url" : "http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/${HDP_version}",
+       "base_url" : "http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/${hdp_version}",
        "verify_base_url" : true
     }
     }
@@ -601,8 +617,8 @@ hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "-->Submitting HDP and HDP Utils repo.json<--"
 	echo -e "-->Submitting HDP and HDP Utils repo.json<--" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-2.6 -d @repo.json >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/2.6/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-${hdp_major_version} -d @repo.json >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json >> hdp_deploy_output.log
 }
 
 # Build the Cluster
@@ -785,7 +801,7 @@ sleep 3
 echo -e "-> Registering HDP Repository"
 hdp_register_repo
 sleep 3
-echo -e "-> Building HDP $HDP_version Cluster $CLUSTER_NAME"
+echo -e "-> Building HDP $hdp_version Cluster $CLUSTER_NAME"
 hdp_cluster_build
 sleep 3
 # Setup new admin account

@@ -6,8 +6,12 @@ utilfqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
 mysql_db_password="somepassword"
 ambari_user="ambari"
 ambari_db_password="somepassword"
+# Set Ambari Version to match supported HDP version
+# HDP 3.1.0.0 = Ambari 2.7.3.0
+# HDP 2.6.5.0 = Ambari 2.7.2.2
 ambari_version="2.6.2.2"
 hdp_version="2.6.5.0"
+hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
 hdp_utils_version="1.1.0.22"
 ranger_user="rangeradmin"
 ranger_db_password="somepassword"
@@ -110,7 +114,7 @@ sed -i 's/client.api.ssl.port=8443/client.api.ssl.port=9443/g' /etc/ambari-serve
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
 unzip -o -j -q jce_policy-8.zip -d /usr/jdk64/jdk1.8.0_*/jre/lib/security/
 service ambari-server start
-wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/${hdp_version}/hdp.repo -O /etc/yum.repos.d/hdp.repo
+wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/${hdp_major_version}.x/updates/${hdp_version}/hdp.repo -O /etc/yum.repos.d/hdp.repo
 wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-${hdp_utils_version}/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 
 # Modify /etc/ambari-agent/conf/ambari-agent.ini
