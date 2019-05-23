@@ -15,6 +15,12 @@ ambari_version="2.6.2.2"
 hdp_version="2.6.5.0"
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
 
+# Configuration needed to automate node scale-up as part of bootstrapping
+CLUSTER_NAME="TestCluster"
+ambari_login="hdpadmin"
+ambari_password="somepassword"
+
+
 EXECNAME="TUNING"
 log "->Start"
 #
@@ -341,6 +347,39 @@ for i in `seq 1 ${#iqn[@]}`; do
 		fi
 	done;
 done;
+fi
+EXECNAME="CLUSTER ACTIONS"
+hostfqdn=`hostname -f`
+log "->Check for Existing Cluster"
+cluster_check=`curl --connect-timeout 5 -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X GET https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME} | wc -l`
+if [ $cluster_check = "0" ]; then 
+	log "->Ambari query for Cluster ${CLUSTER_NAME} timeout.  Assuming this is new build, skipping Host deployment into cluster."
+elif [ $cluster_check -gt 20 ]; then
+	log "->Add Host to Cluster ${CLUSTER_NAME}"
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}
+	log "->Set Host Components"
+	short_hostname=`hostname`
+	echo -e $short_hostname | grep worker
+	datanode_check=`echo -e $?`
+	if [ ${datanode_check} = "0" ]; then
+		host_component[0]="DATANODE"
+		host_component[1]="NODEMANAGER"
+		host_component[2]="METRICS_MONITOR"
+		host_component[3]="HBASE_REGIONSERVER"
+		host_component[4]="ZOOKEEPER_CLIENT"
+	else
+		host_component[0]="METRICS_MONITOR"
+	fi
+	for component in `echo ${host_component[*]}`; do 
+		curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}/host_components/${component}
+		sleep 1
+	done;
+	 for component in `echo ${host_component[*]}`; do
+                curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"HostRoles": {"state": "INSTALLED"}}' https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}/host_components/${component}
+                sleep 1
+        done;
+else
+	log"->Cluster ${CLUSTER_NAME} not found. Skipping Host deployment into cluster."
 fi
 EXECNAME="END"
 log "->DONE"
