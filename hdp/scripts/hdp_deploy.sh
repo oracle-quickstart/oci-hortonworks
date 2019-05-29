@@ -472,6 +472,7 @@ cat << EOF
 			        "yarn.log.server.url" : "http://%HOSTGROUP::master2%:19888/jobhistory/logs",
 				"yarn.nodemanager.resource.cpu-vcores" : "$((wprocs*2))",
 				"yarn.nodemanager.resource.memory-mb" : "${yarn_nodemanager_memory}",
+				"yarn.scheduler.maximum-allocation-mb" : "${yarn_nodemanager_memory}",
 				"yarn.resourcemanager.address" : "%HOSTGROUP::master2%:8050",
 			        "yarn.resourcemanager.zk-address" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.resourcemanager.admin.address" : "%HOSTGROUP::master2%:8141",
@@ -755,11 +756,9 @@ enable_kerberos(){
 	echo -e "-->Stopping all Cluster services" >> hdp_deploy_output.log
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> hdp_deploy_output.log
 	check_ambari_requests
-	#if [[ "${AMBARI_VERSION:0:3}" > "2.7" ]] || [[ "${AMBARI_VERSION:0:3}" == "2.7" ]]; then
-	#       echo -e "\n`ts` Uploading Kerberos Credentials"
-	#        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : { "principal" : "admin/admin@'$REALM'", "key" : "hadoop", "type" : "temporary" }}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
-	#        sleep 1
-	#fi
+	echo -e "-->Uploading Kerberos Credentials"
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : { "principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary" }}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
+	sleep 1
 	echo -e "-->Enabling Kerberos"
 	echo -e "-->Enabling Kerberos" >> hdp_deploy_output.log
 	build_kdc_payload > payload.json

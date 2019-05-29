@@ -327,6 +327,17 @@ for disk in `ls /dev/ | grep nvme | grep n1`; do
 	dcount=$((dcount+1))
 done;
 
+raid_disk_setup() {
+parted -a optimal /dev/oracleoci/$disk mklabel msdos
+parted -a optimal /dev/oracleoci/$disk mkpart primary 1MiB 751GB
+parted -a optimal /dev/oracleoci/$disk set 1 raid on
+}
+
+worker_check=`hostname | grep worker`
+is_worker=`echo -e $?`
+if [ $is_worker = "0" ]; then 
+	log "--->Worker Detected"
+fi
 if [ ${#iqn[@]} -gt 0 ]; then 
 for i in `seq 1 ${#iqn[@]}`; do
 	n=$((i+1))
@@ -335,9 +346,22 @@ for i in `seq 1 ${#iqn[@]}`; do
 		vol_match
 		log "-->Checking /dev/oracleoci/$disk"
 		if [ -h /dev/oracleoci/$disk ]; then
-			mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 /dev/oracleoci/$disk
-			block_data_mount
-                	dcount=$((dcount+1))
+			case $disk in
+				oraclevdb|oraclevdc|oraclevdd|oraclevde)
+				if [ $is_worker = 0 ]; then 
+					raid_disk_setup >> $LOG_FILE
+				else
+					mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 /dev/oracleoci/$disk
+	                                block_data_mount
+        	                        dcount=$((dcount+1))
+				fi
+				;;
+				*)
+				mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 /dev/oracleoci/$disk
+				block_data_mount
+                		dcount=$((dcount+1))
+				;;
+			esac
 			/sbin/tune2fs -i0 -c0 /dev/oracleoci/$disk
 			dsetup="1"
 		else
@@ -348,6 +372,18 @@ for i in `seq 1 ${#iqn[@]}`; do
 	done;
 done;
 fi
+if [ $is_worker = 0 ]; then 
+	EXECNAME="RAID SETUP"
+	log "->Setup LVM"
+	vgcreate RAID0 /dev/oracleoci/oraclevd[b-e]1 >> $LOG_FILE
+	lvcreate -i 2 -I 64 -l 100%FREE -n hadoop RAID0 >> $LOG_FILE
+	log "->Mkfs"
+	mkfs.ext4 /dev/RAID0/hadoop >> $LOG_FILE
+	mkdir -p /hadoop
+	mount /dev/RAID0/hadoop /hadoop >> $LOG_FILE
+	echo "/dev/RAID0/hadoop                /hadoop              ext4    defaults,_netdev,noatime,discard,barrier=0         0 0" | tee -a /etc/fstab
+fi
+
 EXECNAME="CLUSTER ACTIONS"
 hostfqdn=`hostname -f`
 log "->Check for Existing Cluster"
@@ -355,8 +391,12 @@ cluster_check=`curl --connect-timeout 5 -i -s -k -H "X-Requested-By:ambari" -u $
 if [ $cluster_check = "0" ]; then 
 	log "->Ambari query for Cluster ${CLUSTER_NAME} timeout.  Assuming this is new build, skipping Host deployment into cluster."
 elif [ $cluster_check -gt 20 ]; then
+        log "->Add Kerberos Credentials"
+        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{ "Credential" : { "principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary" }}' https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/credentials/kdc.admin.credential
+        sleep 1
 	log "->Add Host to Cluster ${CLUSTER_NAME}"
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}
+	sleep 1
 	log "->Set Host Components"
 	short_hostname=`hostname`
 	echo -e $short_hostname | grep worker

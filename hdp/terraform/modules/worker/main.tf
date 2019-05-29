@@ -25,6 +25,76 @@ resource "oci_core_instance" "Worker" {
 }
 // Block Volume Creation for Worker 
 
+# Data Volumes for RAID cache
+
+resource "oci_core_volume" "WorkerRAIDVolume1" {
+  count               = "${var.instances}"
+  availability_domain = "${var.availability_domain}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "Cloudera Worker  ${format("%01d", count.index+1)} RAID cache"
+  size_in_gbs         = "700"
+}
+
+resource "oci_core_volume_attachment" "WorkerRAIDAttachment1" {
+  count           = "${var.instances}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.WorkerRAIDVolume1.*.id[count.index]}"
+  device = "/dev/oracleoci/oraclevdb"
+}
+
+resource "oci_core_volume" "WorkerRAIDVolume2" {
+  count               = "${var.instances}"
+  availability_domain = "${var.availability_domain}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "Cloudera Worker  ${format("%01d", count.index+1)} RAID cache 2"
+  size_in_gbs         = "700"
+}
+
+resource "oci_core_volume_attachment" "WorkerRAIDAttachment2" {
+  count           = "${var.instances}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.WorkerRAIDVolume2.*.id[count.index]}"
+  device = "/dev/oracleoci/oraclevdc"
+}
+
+resource "oci_core_volume" "WorkerRAIDVolume3" {
+  count               = "${var.instances}"
+  availability_domain = "${var.availability_domain}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "Cloudera Worker  ${format("%01d", count.index+1)} RAID cache 3"
+  size_in_gbs         = "700"
+}
+
+resource "oci_core_volume_attachment" "WorkerRAIDAttachment3" {
+  count           = "${var.instances}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.WorkerRAIDVolume3.*.id[count.index]}"
+  device = "/dev/oracleoci/oraclevdd"
+}
+
+resource "oci_core_volume" "WorkerRAIDVolume4" {
+  count               = "${var.instances}"
+  availability_domain = "${var.availability_domain}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "Cloudera Worker  ${format("%01d", count.index+1)} RAID cache 4"
+  size_in_gbs         = "700"
+}
+
+resource "oci_core_volume_attachment" "WorkerRAIDAttachment4" {
+  count           = "${var.instances}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.WorkerRAIDVolume4.*.id[count.index]}"
+  device = "/dev/oracleoci/oraclevde"
+}
+
 # Data Volumes for HDFS
 resource "oci_core_volume" "WorkerDataVolume" {
   count		      = "${(var.instances * var.block_volumes_per_worker)}"
