@@ -757,7 +757,7 @@ enable_kerberos(){
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> hdp_deploy_output.log
 	check_ambari_requests
 	echo -e "-->Uploading Kerberos Credentials"
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : { "principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary" }}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : {" principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary"}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
 	sleep 1
 	echo -e "-->Enabling Kerberos"
 	echo -e "-->Enabling Kerberos" >> hdp_deploy_output.log
