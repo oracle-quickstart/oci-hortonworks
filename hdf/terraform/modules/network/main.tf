@@ -38,7 +38,7 @@ data "oci_core_services" "hortonworks_services" {
 resource "oci_core_service_gateway" "hortonworks_service_gateway" {
     compartment_id = "${var.compartment_ocid}"
     services {
-        service_id = "${data.oci_core_services.hortonworks_services.services.1.id}"
+      service_id = "${lookup(data.oci_core_services.all_svcs_moniker.services[0], "id")}"        
     }
     vcn_id = "${oci_core_vcn.hortonworks_vcn.id}"
     display_name = "Hortonworks Service Gateway"
