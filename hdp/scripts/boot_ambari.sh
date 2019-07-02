@@ -9,10 +9,10 @@ ambari_db_password="somepassword"
 # Set Ambari Version to match supported HDP version
 # HDP 3.1.0.0 = Ambari 2.7.3.0
 # HDP 2.6.5.0 = Ambari 2.7.2.2
-ambari_version="2.6.2.2"
-hdp_version="2.6.5.0"
+ambari_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_version`
+hdp_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_version`
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
-hdp_utils_version="1.1.0.22"
+hdp_utils_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_utils_version`
 ranger_user="rangeradmin"
 ranger_db_password="somepassword"
 #
@@ -462,5 +462,11 @@ for i in `seq 1 ${#iqn[@]}`; do
 	done;
 done;
 fi
-EXECNAME="END"
+EXECNAME="HDP DEPLOY"
+log "->HDP Deployment"
+log "-->Download/Extract deployment script"
+curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_deploy | base64 -d > /var/lib/cloud/instance/scripts/hdp_deploy.sh.gz
+gunzip /var/lib/cloud/instance/scripts/hdp_deploy.sh.gz
+log "-->Deployment Execution"
+./hdp_deploy.sh
 log "->DONE"

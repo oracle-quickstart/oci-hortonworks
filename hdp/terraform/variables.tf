@@ -1,4 +1,65 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# Hadoop Variables
+# These can be modified to customize deployment
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "ambari_version" {
+  default = "2.6.2.2"
+}
+
+variable "hdp_version" {
+  default = "2.6.5.0"
+}
+
+variable "hdp_utils_version" {
+  default = "1.1.0.22"
+}
+
+variable "cluster_name" {
+  default = "TestCluster"
+}
+
+variable "deployment_type" {
+  default = "simple"
+}
+
+variable "worker_instance_shape" {
+  default = "BM.DenseIO2.52"
+}
+
+variable "worker_node_count" {
+  default = "3"
+}
+
+variable "data_blocksize_in_gbs" {
+  default = "700"
+}
+
+variable "block_volumes_per_worker" {
+   default = "3"
+}
+
+variable "master_instance_shape" {
+  default = "VM.Standard2.16"
+}
+
+variable "master_node_count" {
+  default = "2"
+}
+
+variable "nn_volume_size_in_gbs" {
+  default = "500"
+}
+
+variable "bastion_instance_shape" {
+  default = "VM.Standard2.4"
+}
+
+variable "utility_instance_shape" {
+  default = "VM.Standard2.16"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Environmental variables
 # You probably want to define these as environmental variables.
 # Instructions on that are here: https://github.com/oci-quickstart/oci-prerequisites
@@ -21,81 +82,9 @@ variable "ssh_private_key" {}
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "availability_domain" {
-  default = "2"
+  default = "1"
 }
 
-# Number of Master Nodes in the Cluster
-
-variable "master_node_count" {
-  default = "2"
-}
-
-# Number of Workers in the Cluster
-
-variable "worker_node_count" {
-  default = "5"
-}
-
-# Size of each Block Volume used for HDFS /data/
-# Minimum recommended size is 700GB per Volume to achieve max IOPS/MBps
-# Note that total HDFS capacity per worker is limited by this size.
-# Here is a total capacity per worker list for reference (using 30 data volumes per worker):
-# 700GB Volume Size = 21 TB per worker
-# 1000GB Volume Size = 30 TB per worker
-# 2000GB Volume Size = 60 TB per worker
-
-variable "data_blocksize_in_gbs" {
-  default = "700"
-}
-
-# Number of Block Volumes per Worker
-# Minimum recommended is 3 - Scale up to 30 per compute host
-# 5 workers @ 700GB Volume Size = Max HDFS Capacity 105 TB, 35 TB Usable with 3x Replication
-# 10 workers @ 1TB Volume Size = Max HDFS Capacity 300 TB, 100 TB Usable with 3x Replication
-# 10 workers @ 2TB Volume Size = Max HDFS Capacity 600 TB, 200 TB Usable with 3x Replication
-# If using DenseIO local storage only - set this to '0'
-# If using Heterogenous storage, this will add Block Volume capacity on top of Local storage.
-# When using Heterogenous storage - be sure to modify the deploy_on_oci.py and set data_tiering flag to 'True'
-
-variable "block_volumes_per_worker" {
-   default = "3"
-}
-
-# Size for NameNode and SecondaryNameNode data volume (Journal Data)
-
-variable "nn_volume_size_in_gbs" {
-  default = "500"
-}
-
-# 
-# Set Cluster Shapes in this section
-#
-
-variable "bastion_instance_shape" {
-  default = "VM.Standard2.4"
-}
-
-variable "master_instance_shape" {
-  default = "VM.Standard2.16"
-}
-
-variable "utility_instance_shape" {
-  default = "VM.Standard2.16"
-}
-
-variable "worker_instance_shape" {
-  default = "BM.DenseIO2.52"
-}
-
-# Path to SSH Key
-
-variable "ssh_keypath" {
-  default = "/home/opc/.ssh/id_rsa"
-}
-
-variable "private_key_path" {
-  default = "/home/opc/.ssh/id_rsa"
-}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Constants

@@ -1,33 +1,29 @@
 #!/bin/bash
 # Ambari Setup Script to deploy HDP
 
+LOG_FILE="/var/log/hdp-OCI-deploy.log"
+
 # Parameters are passed to script
-
-## Util FQDN is the Public IP of the Ambari host
-ambari_ip=$1
+ambari_fqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
+ambari_ip=`host ${ambari_fqdn} | gawk '{print $4}'`
 ## AD is needed to set proper subnet for host topology
-ad=$2
+ad=`curl -L http://169.254.169.254/opc/v1/instance/metadata/AD`
 ## Worker Shape - used for tuning
-worker_shape=$3
+worker_shape=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_shape`
 ## Number of Block Volume HDFS Disks
-block_disks=$4
+block_disks=`curl -L http://169.254.169.254/opc/v1/instance/metadata/block_volumes_per_worker`
 ## Number of Workers
-wc=$5
-
-
-if [ -z $5 ]; then
-	echo "Usage:\n"
-	echo "./hdp_install.sh <ambari_public_ip> <availability_domain> <worker_shape> <block_volume_hdfs_disk_count> <worker_count>"
-	exit
-fi
+wc=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_count`
+## Deployment Type - Simple deploys basic cluster, Secure deploys with Kerberos.
+deployment_type=`curl -L http://169.254.169.254/opc/v1/instance/metadata/deployment_type`
 
 # Set some Global Variables first
 
 ## HDP Version - Modify these to install specific version
 # HDP 3.1.0.0 - 2.6.5.0
-hdp_version="2.6.5.0"
+hdp_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_version`
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1,2`
-UTILS_version="1.1.0.22"
+UTILS_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_utils_version`
 
 ## Cluster Info 
 CLUSTER_NAME="TestCluster"
@@ -610,24 +606,24 @@ hdp_build_config(){
 hdp_register_cluster(){
 	## Register BP with Ambari
 	echo -e "-->Submitting cluster_config.json<--"
-	echo -e "-->Submitting cluster_config.json<--" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json >> hdp_deploy_output.log 
+	echo -e "-->Submitting cluster_config.json<--" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/blueprints/${CLUSTER_NAME} -d @cluster_config.json >> $LOG_FILE 
 }
 
 # Register HDP and Utils Repos
 hdp_register_repo(){
 	## Setup Repo using REST API
 	echo -e "-->Submitting HDP and HDP Utils repo.json<--"
-	echo -e "-->Submitting HDP and HDP Utils repo.json<--" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-${hdp_major_version} -d @repo.json >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json >> hdp_deploy_output.log
+	echo -e "-->Submitting HDP and HDP Utils repo.json<--" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-${hdp_major_version} -d @repo.json >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/stacks/HDP/versions/${hdp_major_version}/operating_systems/redhat7/repositories/HDP-UTILS-${UTILS_version} -d @hdputils-repo.json >> $LOG_FILE
 }
 
 # Build the Cluster
 hdp_cluster_build(){
 	echo -e "-->Submitting hostmap.json<--"
-	echo -e "-->Submitting hostmap.json<--" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json >> hdp_deploy_output.log
+	echo -e "-->Submitting hostmap.json<--" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME} -d @hostmap.json >> $LOG_FILE
 }
 
 # Check Ambari Requests - wait until finished
@@ -729,44 +725,44 @@ EOF
 # Enable Kerberos
 enable_kerberos(){
 	echo -e "-->Adding KERBEROS Service to cluster"
-	echo -e "-->Adding KERBEROS Service to cluster" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> hdp_deploy_output.log
+	echo -e "-->Adding KERBEROS Service to cluster" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> $LOG_FILE
 	echo -e "-->Adding KERBEROS_CLIENT component to the KERBEROS service"
-	echo -e "-->Adding KERBEROS_CLIENT component to the KERBEROS service" >> hdp_deploy_output.log
+	echo -e "-->Adding KERBEROS_CLIENT component to the KERBEROS service" >> $LOG_FILE
 	sleep 1
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS/components/KERBEROS_CLIENT >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS/components/KERBEROS_CLIENT >> $LOG_FILE
 	sleep 1
 	build_kerberos_payload > kpayload.json
 	echo -e "-->Submitting KERBEROS Payload"
-	echo -e "-->Submitting KERBEROS Payload" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @kpayload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> hdp_deploy_output.log
+	echo -e "-->Submitting KERBEROS Payload" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @kpayload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> $LOG_FILE
 	echo -e "-->Creating the KERBEROS_CLIENT host components for each cluster host"
 	for cluster_host in `curl -s -k -u ${ambari_login}:${ambari_password} -H "X-Requested-By: ambari" -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts | grep host_name | gawk '{print $3}' | cut -d '"' -f2`;
 	do
 		echo -e "--->Adding ${cluster_host}"
-		echo -e "--->Adding ${cluster_host}" >> hdp_deploy_output.log
-	        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{"host_components" : [{"HostRoles" : {"component_name":"KERBEROS_CLIENT"}}]}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/hosts?Hosts/host_name=${cluster_host} >> hdp_deploy_output.log
+		echo -e "--->Adding ${cluster_host}" >> $LOG_FILE
+	        curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{"host_components" : [{"HostRoles" : {"component_name":"KERBEROS_CLIENT"}}]}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/hosts?Hosts/host_name=${cluster_host} >> $LOG_FILE
 	        sleep 1
 	done
 	echo -e "-->Installing KERBEROS Cluster Service and Components"
-	echo -e "-->Installing KERBEROS Cluster Service and Components" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Install Kerberos Cluster Service"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> hdp_deploy_output.log
+	echo -e "-->Installing KERBEROS Cluster Service and Components" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Install Kerberos Cluster Service"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> $LOG_FILE
 	check_ambari_requests
 	echo -e "-->Stopping all Cluster services"
-	echo -e "-->Stopping all Cluster services" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> hdp_deploy_output.log
+	echo -e "-->Stopping all Cluster services" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> $LOG_FILE
 	check_ambari_requests
 	echo -e "-->Uploading Kerberos Credentials"
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : {" principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary"}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
 	sleep 1
 	echo -e "-->Enabling Kerberos"
-	echo -e "-->Enabling Kerberos" >> hdp_deploy_output.log
+	echo -e "-->Enabling Kerberos" >> $LOG_FILE
 	build_kdc_payload > payload.json
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @payload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> hdp_deploy_output.log
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @payload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> $LOG_FILE
 	check_ambari_requests
 	echo -e "->Starting Cluster Services"
-	echo -e "->Starting Cluster Services" >> hdp_deploy_output.log
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> hdp_deploy_output.log
+	echo -e "->Starting Cluster Services" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
 	check_ambari_requests
 }
 
@@ -790,7 +786,7 @@ while [ $ambari_up = "0" ]; do
 done;
 start_time=`date +%Y-%m%d-%H:%M:%S`
 start_time_s=`date +%H:%M:%S`
-echo -e "$start_time" > hdp_deploy_output.log
+echo -e "$start_time" > $LOG_FILE
 # Cluster Setup
 echo -e "-> Building HDP Configuration"
 hdp_build_config
@@ -805,27 +801,31 @@ echo -e "-> Building HDP $hdp_version Cluster $CLUSTER_NAME"
 hdp_cluster_build
 sleep 3
 # Setup new admin account
-echo -e "-> Creating new Admin account: ${ambari_login}"
+echo -e "-> Creating new Admin account: ${ambari_login}" >> $LOG_FILE
 new_admin > ${ambari_login}.json
-curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> hdp_deploy_output.log
+curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f new_admin.json
 sleep 3
 # reset default  admin account to random password
-echo -e "-> Reset default admin account to random password"
+echo -e "-> Reset default admin account to random password" >> $LOG_FILE
 admin_password=`create_random_password`
 admin_password_json > admin.json
-curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> hdp_deploy_output.log
+curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f admin.json
 check_ambari_requests
-enable_kerberos
+if [ $deployment_type = "simple" ]; then 
+	sleep .001
+else
+	enable_kerberos
+fi
 end_time=`date +%Y-%m%d-%H:%M:%S`
 end_time_s=`date +%H:%M:%S` 
-echo -e "\t--CLUSTER SETUP COMPLETE--"
-echo -e "\t--SUMMARY--"
+echo -e "\t--CLUSTER SETUP COMPLETE--" >> $LOG_FILE
+echo -e "\t--SUMMARY--" >> $LOG_FILE
 total1=`date +%s -d ${start_time_s}`
 total2=`date +%s -d ${end_time_s}`
 totaldiff=`expr ${total2} - ${total1}`
-echo -e "\tCluster Setup Took `date +%H:%M:%S -ud @${totaldiff}`"
-echo -e "----------------------------------"
-echo -e "Ambari Login: https://${ambari_ip}:9443"
+echo -e "\tCluster Setup Took `date +%H:%M:%S -ud @${totaldiff}`" >> $LOG_FILE
+echo -e "----------------------------------" >> $LOG_FILE
+echo -e "Ambari Login: https://${ambari_ip}:9443" >> $LOG_FILE
 

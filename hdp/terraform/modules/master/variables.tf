@@ -6,13 +6,17 @@
 
 variable "region" {}
 variable "compartment_ocid" {}
-variable "private_key_path" {}
 variable "ssh_public_key" {}
 variable "ssh_private_key" {}
 variable "instances" {}
 variable "subnet_id" {}
 variable "user_data" {}
 variable "ambari_server" {}
+variable "ambari_version" {}
+variable "hdp_version" {}
+variable "hdp_utils_version" {}
+variable "deployment_type" {}
+variable "cluster_name" {}
 variable "image_ocid" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -44,13 +48,7 @@ variable "master_instance_shape" {
   default = "VM.Standard2.8"
 }
 
-# Path to SSH Key
-
-variable "ssh_keypath" {
-  default = "/home/opc/.ssh/id_rsa"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------------------------------------------------
 # Constants
 # You probably don't need to change these.
 # ---------------------------------------------------------------------------------------------------------------------

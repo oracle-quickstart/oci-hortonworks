@@ -16,6 +16,19 @@ resource "oci_core_instance" "Utility" {
     ssh_authorized_keys = "${var.ssh_public_key}"
     user_data		= "${var.user_data}"
     ambari_server       = "${var.ambari_server}"
+    ambari_version      = "${var.ambari_version}"
+    hdp_version         = "${var.hdp_version}"
+    hdp_utils_version   = "${var.hdp_utils_version}"
+    worker_shape        = "${var.worker_shape}"
+    block_volumes_per_worker = "${var.block_volumes_per_worker}"
+    AD                  = "${var.AD}"
+    deployment_type     = "${var.deployment_type}"
+    worker_node_count   = "${var.worker_node_count}"
+    cluster_name        = "${var.cluster_name}"
+  }
+
+  extended_metadata {
+    hdp_deploy          = "${var.hdp_deploy}"
   }
 
   timeouts {

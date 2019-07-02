@@ -6,13 +6,22 @@
 
 variable "region" {}
 variable "compartment_ocid" {}
-variable "private_key_path" {}
 variable "ssh_public_key" {}
 variable "ssh_private_key" {}
 variable "instances" {}
 variable "subnet_id" {}
 variable "user_data" {}
 variable "ambari_server" {}
+variable "ambari_version" {}
+variable "hdp_version" {}
+variable "hdp_utils_version" {}
+variable "deployment_type" {}
+variable "cluster_name" {}
+variable "worker_shape" {}
+variable "block_volumes_per_worker" {}
+variable "hdp_deploy" {}
+variable "AD" {}
+variable "worker_node_count" {}
 variable "image_ocid" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -36,12 +45,6 @@ variable "nn_volume_size_in_gbs" {
 
 variable "utility_instance_shape" {
   default = "VM.Standard2.8"
-}
-
-# Path to SSH Key
-
-variable "ssh_keypath" {
-  default = "/home/opc/.ssh/id_rsa"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

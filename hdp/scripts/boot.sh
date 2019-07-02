@@ -11,15 +11,16 @@ log() {
 # Ambari Agent Install - set version to match Ambari Server version
 # HDP 3.1.0.0 = Ambari 2.7.3.0
 # HDP 2.6.5.0 = Ambari 2.6.2.2
-ambari_version="2.6.2.2"
-hdp_version="2.6.5.0"
+ambari_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_version`
+hdp_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_version`
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
+hdp_utils_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_utils_version`
 
 # Configuration needed to automate node scale-up as part of bootstrapping
-CLUSTER_NAME="TestCluster"
+CLUSTER_NAME=`curl -L http://169.254.169.254/opc/v1/instance/metadata/cluster_name`
 ambari_login="hdpadmin"
 ambari_password="somepassword"
-
+deployment_type=`curl -L http://169.254.169.254/opc/v1/instance/metadata/deployment_type`
 
 EXECNAME="TUNING"
 log "->Start"
@@ -31,12 +32,17 @@ log "->Start"
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
 
-EXECNAME="JAVA - KERBEROS"
+EXECNAME="JAVA"
 log "->INSTALL"
 ## Install Java & Kerberos client
-yum install java-1.8.0-openjdk.x86_64 krb5-workstation -y
+yum install java-1.8.0-openjdk.x86_64 -y
 
+if [ $deployment_type = "simple" ]; then 
+	sleep .001
+else
 EXECNAME="KERBEROS"
+log "->INSTALL"
+yum install krb5-workstation -y
 log "->krb5.conf"
 ## Configure krb5.conf
 kdc_server=${utilfqdn}
@@ -99,6 +105,7 @@ includedir /etc/krb5.conf.d/
     admin_server = FILE:/var/log/kadmin.log
     default = FILE:/var/log/krb5lib.log
 EOF
+fi
 
 EXECNAME="TUNING"
 log "->OS"
@@ -147,7 +154,7 @@ log "->Install"
 wget -nv http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/${ambari_version}/ambari.repo -O /etc/yum.repos.d/ambari.repo
 yum install ambari-agent -y >> ${LOG_FILE}
 wget -nv http://public-repo-1.hortonworks.com/HDP/centos7/${hdp_major_version}.x/updates/${hdp_version}/hdp.repo -O /etc/yum.repos.d/hdp.repo
-wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.22/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
+wget -nv http://public-repo-1.hortonworks.com/HDP-UTILS-${hdp_utils_version}/repos/centos7/hdp-utils.repo -O /etc/yum.repos.d/hdp-utils.repo
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
 unzip -o -j -q jce_policy-8.zip -d /usr/jdk64/jdk1.8.0_*/jre/lib/security/
 
