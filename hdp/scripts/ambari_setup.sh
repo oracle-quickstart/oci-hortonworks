@@ -462,7 +462,4 @@ for i in `seq 1 ${#iqn[@]}`; do
 	done;
 done;
 fi
-EXECNAME="HDP DEPLOY"
-log "-->Deployment Execution"
-./hdp_deploy.sh
 log "->DONE"
