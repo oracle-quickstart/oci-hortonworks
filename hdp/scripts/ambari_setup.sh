@@ -133,15 +133,18 @@ log "->Start"
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
 
-EXECNAME="JAVA - KERBEROS"
+EXECNAME="JAVA"
 log "->INSTALL"
-## Install Java & Kerberos client
-yum install java-1.8.0-openjdk.x86_64 krb5-workstation -y
+## Install Java
+yum install java-1.8.0-openjdk.x86_64 -y
 
+if [ $deployment_type = "simple" ]; then
+	sleep .001
+else
 ## KERBEROS INSTALL
 EXECNAME="KERBEROS"
 log "-> INSTALL"
-
+yum -y install krb5-workstation
 yum -y install krb5-server krb5-libs krb5-workstation
 KERBEROS_PASSWORD="SOMEPASSWORD"
 AMBARI_USER_PASSWORD="somepassword"
@@ -244,6 +247,7 @@ systemctl start krb5kdc.service
 systemctl start kadmin.service
 systemctl enable krb5kdc.service
 systemctl enable kadmin.service
+fi
 
 EXECNAME="TUNING"
 log "->OS"
@@ -462,7 +466,4 @@ for i in `seq 1 ${#iqn[@]}`; do
 	done;
 done;
 fi
-EXECNAME="HDP DEPLOY"
-log "-->Deployment Execution"
-./hdp_deploy.sh
 log "->DONE"

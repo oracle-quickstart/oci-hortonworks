@@ -18,4 +18,6 @@ EXECNAME="Ambari Setup"
 log "->Execute"
 cd /var/lib/cloud/instance/scripts/
 ./ambari_setup.sh
-
+EXECNAME="HDP Deplyment"
+log "->Execute"
+./hdp_deploy.sh

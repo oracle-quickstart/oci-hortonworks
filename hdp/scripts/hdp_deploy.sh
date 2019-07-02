@@ -13,7 +13,7 @@ worker_shape=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_sha
 ## Number of Block Volume HDFS Disks
 block_disks=`curl -L http://169.254.169.254/opc/v1/instance/metadata/block_volumes_per_worker`
 ## Number of Workers
-wc=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_count`
+wc=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_node_count`
 ## Deployment Type - Simple deploys basic cluster, Secure deploys with Kerberos.
 deployment_type=`curl -L http://169.254.169.254/opc/v1/instance/metadata/deployment_type`
 
