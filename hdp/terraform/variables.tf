@@ -3,6 +3,10 @@
 # These can be modified to customize deployment
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "ssh_public_key" {}
+
+variable "ssh_private_key" {}
+
 variable "ambari_version" {
   default = "2.6.2.2"
 }
@@ -73,8 +77,6 @@ variable "tenancy_ocid" {}
 variable "user_ocid" {}
 variable "fingerprint" {}
 variable "region" {}
-variable "ssh_public_key" {}
-variable "ssh_private_key" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
