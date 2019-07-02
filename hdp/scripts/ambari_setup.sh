@@ -463,10 +463,6 @@ for i in `seq 1 ${#iqn[@]}`; do
 done;
 fi
 EXECNAME="HDP DEPLOY"
-log "->HDP Deployment"
-log "-->Download/Extract deployment script"
-curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_deploy | base64 -d > /var/lib/cloud/instance/scripts/hdp_deploy.sh.gz
-gunzip /var/lib/cloud/instance/scripts/hdp_deploy.sh.gz
 log "-->Deployment Execution"
 ./hdp_deploy.sh
 log "->DONE"
