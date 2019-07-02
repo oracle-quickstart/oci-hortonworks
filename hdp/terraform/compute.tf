@@ -29,7 +29,7 @@ module "utility" {
 	ssh_private_key = "${var.ssh_private_key}"
         ssh_public_key = "${var.ssh_public_key}"
         utility_instance_shape = "${var.utility_instance_shape}"
-        user_data = "${base64encode(file("../scripts/boot_ambari.sh"))}"
+        user_data = "${base64encode(file("../scripts/ambari_utility_boot.sh"))}"
 	ambari_server = "hw-utility-1.public${var.availability_domain}.${module.network.vcn-dn}"
 	ambari_version = "${var.ambari_version}"
 	hdp_version = "${var.hdp_version}"
@@ -41,6 +41,7 @@ module "utility" {
 	worker_node_count = "${var.worker_node_count}"
 	deployment_type = "${var.deployment_type}"
 	cluster_name = "${var.cluster_name}"
+	ambari_setup = "${base64gzip(file("../scripts/ambari_setup.sh"))}"
 	hdp_deploy = "${base64gzip(file("../scripts/hdp_deploy.sh"))}"
 }
 

@@ -28,6 +28,7 @@ resource "oci_core_instance" "Utility" {
   }
 
   extended_metadata {
+    ambari_setup        = "${var.ambari_setup}"
     hdp_deploy          = "${var.hdp_deploy}"
   }
 

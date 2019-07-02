@@ -20,6 +20,7 @@ variable "cluster_name" {}
 variable "worker_shape" {}
 variable "block_volumes_per_worker" {}
 variable "hdp_deploy" {}
+variable "ambari_setup" {}
 variable "AD" {}
 variable "worker_node_count" {}
 variable "image_ocid" {}
