@@ -75,6 +75,7 @@ variable "fingerprint" {}
 variable "region" {}
 variable "ssh_public_key" {}
 variable "ssh_private_key" {}
+variable "private_key_path" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
