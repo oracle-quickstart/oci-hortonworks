@@ -68,10 +68,12 @@ variable "utility_instance_shape" {
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "tenancy_ocid" {}
+variable "region" {}
+variable "compartment_ocid" {}
 variable "availability_domain" {
   default = "1"
 }
-
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Constants
