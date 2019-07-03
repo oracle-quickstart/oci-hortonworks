@@ -64,22 +64,6 @@ variable "utility_instance_shape" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Environmental variables
-# You probably want to define these as environmental variables.
-# Instructions on that are here: https://github.com/oci-quickstart/oci-prerequisites
-# ---------------------------------------------------------------------------------------------------------------------
-
-variable "compartment_ocid" {}
-
-# Required by the OCI Provider
-
-variable "tenancy_ocid" {}
-variable "user_ocid" {}
-variable "fingerprint" {}
-variable "region" {}
-variable "private_key_path" {}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
