@@ -814,7 +814,8 @@ curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json h
 rm -f admin.json
 check_ambari_requests
 if [ $deployment_type = "simple" ]; then 
-	sleep .001
+	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
+        check_ambari_requests
 else
 	enable_kerberos
 fi
