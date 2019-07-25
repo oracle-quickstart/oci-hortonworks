@@ -6,6 +6,8 @@ utilfqdn=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_server`
 mysql_db_password="somepassword"
 ambari_user="ambari"
 ambari_db_password="somepassword"
+mysql_admin_user="mysqladmin"
+msyql_admin_password="somepassword"
 # Set Ambari Version to match supported HDP version
 # HDP 3.1.0.0 = Ambari 2.7.3.0
 # HDP 2.6.5.0 = Ambari 2.7.2.2
@@ -13,8 +15,6 @@ ambari_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/ambari_v
 hdp_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_version`
 hdp_major_version=`echo $hdp_version | cut -d '.' -f 1`
 hdp_utils_version=`curl -L http://169.254.169.254/opc/v1/instance/metadata/hdp_utils_version`
-ranger_user="rangeradmin"
-ranger_db_password="somepassword"
 #
 
 LOG_FILE="/var/log/hortonworks-OCI-initialize.log"
@@ -32,9 +32,7 @@ CREATE USER '${ambari_user}'@'localhost' IDENTIFIED BY '${ambari_db_password}';
 GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'localhost';
 CREATE USER '${ambari_user}'@'${utilfqdn}' IDENTIFIED BY '${ambari_db_password}';
 GRANT ALL PRIVILEGES ON *.* TO '${ambari_user}'@'${utilfqdn}';
-CREATE DATABASE ranger;
-GRANT ALL PRIVILEGES ON ranger.* to '${ranger_user}'@'%' identified by '${ranger_db_password}';
-GRANT ALL PRIVILEGES ON ranger.* to '${ranger_user}'@'$utilfqdn' with grant option;
+GRANT ALL PRIVILEGES ON *.* to '${mysql_admin_user}'@'%' IDENTIFIED BY '${mysql_admin_password}' WITH GRANT OPTION;
 SET GLOBAL log_bin_trust_function_creators = 1;
 FLUSH PRIVILEGES;
 EOF
