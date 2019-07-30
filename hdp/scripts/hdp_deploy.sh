@@ -484,8 +484,8 @@ cat << EOF
 				"mapreduce.reduce.shuffle.parallelcopies" : "50",
 				"mapreduce.reduce.shuffle.fetch.retry.enabled" : "1",
 				"mapreduce.task.io.sort.factor" : "100",
-				"yarn.app.mapreduce.am.command-opts" : "-Xmx3276m -Dhdp.version=${hdp.version}",
-				"mapreduce.map.java.opts" : "-Xmx3276m"
+				"yarn.app.mapreduce.am.command-opts" : "-Xmx3276m",
+				"mapreduce.map.java.opts" : "-Xmx3276m",
 				"yarn.app.mapreduce.am.resource.mb" : "4096"
 			}}
 		},
@@ -671,7 +671,7 @@ check_ambari_requests(){
 	total_requests=`curl -k -i -s -H "X-Requested-By: ambari" -u ${ambari_login}:${ambari_password} -X GET https://${ambari_ip}:9443/api/v1/clusters/${CLUSTER_NAME}/requests?fields=Requests/id,Requests/request_status,Requests/request_context | grep -e '"request_status"' | wc -l`
 	echo -e "$total_requests requests found."
 	if [ $total_requests = "0" ]; then
-	        echo -e "Failed to find requests... check Ambari manually for cluster status, check hdp_deplooy_output.log for more detail."
+	        echo -e "Failed to find requests... check Ambari manually for cluster status."
 	        echo -e "Ambari Login: https://${ambari_ip}:9443"
 	        exit
 	fi

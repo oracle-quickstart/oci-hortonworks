@@ -19,5 +19,5 @@ log "->Execute"
 cd /var/lib/cloud/instance/scripts/
 ./ambari_setup.sh
 EXECNAME="HDP Deplyment"
-log "->Execute"
+log "->Execute - check /var/log/hdp-OCI-deploy.log for build debug"
 ./hdp_deploy.sh
