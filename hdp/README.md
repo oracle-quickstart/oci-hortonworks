@@ -1,39 +1,26 @@
-# hdp
-This is a Terraform template for deploying a fully configured HDP cluster on OCI..
+# Hortonworks Data Platform 
+This is a Terraform template for deploying a fully configured HDP cluster on OCI.
 
 |             | Worker Nodes   | Bastion Instance | Utility and Master Instances |
 |-------------|----------------|------------------|------------------------------|
-| Recommended | BM.DenseIO2.52 | VM.Standard2.4   | VM.Standard2.16              |
+| Recommended (Default) | BM.DenseIO2.52 | VM.Standard2.4   | VM.Standard2.16              |
 | Minimum     | VM.Standard2.8 | VM.Standard2.1   | VM.Standard2.8               |
 
 Host types can be customized in this template.   Also included with this template is an easy method to customize block volume quantity and size as pertains to HDFS capacity.   See "variables.tf" for more information in-line.
 
-## Prerequisites
-First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oracle/oci-quickstart-prerequisites).
-
 ## Scaling
 
-Modify the [terraform/variables.tf](terraform/variables.tf) file prior to deployment and set the number of workers to scale your cluster dynamically.
+Modify the variable "worker_node_count" to scale the number of cluster workers.   The default (minimum) is 3 nodes.
 
 	variable "worker_node_count" { default = "3" }
 
-Alternatively, you can export this to your shell as a TF Variable:
-
-	export TF_VAR_worker_node_count="5"
-
-This would over-ride the default (minimum requirement) of 3 worker nodes and deploy 5 workers.   
-
 ## HDFS Storage Capacity - NVME & Block Volumes
 
-By default this template is set to leverage DenseIO Bare Metal shapes with local NVME, as well as Block Volumes using Data Tiering for HDFS.   When mixed storage is provisioned, local NVME defaults to [DISK] and Block Volumes are set to [ARCHIVE] using the default Data Tiering storage policies.   If you change the worker type to a non-DenseIO shape, then you will need to scale the amount of HDFS capacity for the cluster by incrementing "hdfs_usable_in_gbs" variable.   This can be done in [terraform/variables.tf](terraform/variables.tf) or by exporting as a TF_VAR:
+By default this template is set to leverage DenseIO Bare Metal shapes with local NVME, as well as Block Volumes using Data Tiering for HDFS.   When mixed storage is provisioned, local NVME defaults to [DISK] and Block Volumes are set to [ARCHIVE] using the default Data Tiering storage policies.   If you change the worker type to a non-DenseIO shape, then you will need to scale the amount of HDFS capacity for the cluster by incrementing the "block_volumes_per_worker" variable.   By default these volumes are 700GB in size, which maximizes IOPS and throughput at a per-volume level.
 
-	export TF_VAR_hdfs_usable_in_gbs="10000"
+When using DenseIO local storage only, set "block_volumes_per_worker" to "0" to remove Block Volumes for HDFS entirely and only use local NVME for HDFS.
 
-This would set the usable HDFS Block Volume capacity to 10TB - Triple replication is accounted for in the formula used to setup Block Volumes so this would actually consume 30TB of Block Volume in the tenancy.  By default this value is set to "3000" (3TB).   All Block Volumes are set at 700GB in size with the variable "data_blocksize_in_gbs", it is not recommended to change this value below the default.  When scaling to Block Volume capacities beyond 22TB per worker, you will need to adjust the default blocksize to a larger value.  Failing to do so will result in attempting to request more Block Volume attachments than the instance can attach (32).
-
-When using DenseIO local storage only, set this value to "0" to remove Block Volumes for HDFS entirely:
-
-	export TF_VAR_hdfs_usable_in_gbs="0"
+If higher density is required, the block volume size can be scaled up in tandem with the block volume count using the variable "data_blocksize_in_gbs".  Best practice is to scale wider on the number of block volumes per worker rather than using a small number of high capacity volumes.
 
 ## Deployment Customization
 
@@ -44,44 +31,32 @@ Version 3.x versus 2.x deployment is controlled using the following variables:
 
 Refer to the [Hortonworks Support Matrix](https://supportmatrix.hortonworks.com/) for version dependencies between platform components.
 
-Deployment customization is done by modifying a few files:
+The variable "deployment_type" controls whether Secure Cluster is setup as part of deployment.   By default this template is set to use "simple" deployment, which is a fast deployment.  To enable Kerberos for cluster security, change the "deployment_type" to "secure".   This setup takes a little longer, see the Cluster Security section below for more detail.
+
+Additional Deployment customization is done by modifying a few files:
 * [scripts/hdp_deploy.sh](scripts/hdp_deploy.sh) Cluster Deployment, customize Ambari admin credentials, HDP version, Cluster Name, Configuration and Cluster Topology.  Configuration and Topology customization requires knowledge of [Ambari Blueprints](https://cwiki.apache.org/confluence/display/AMBARI/Blueprints).  YAML can be modified/inserted into the appropriate section of this script to allow for custom deployment.
 	
-	hdp_version
 	UTILS_version
 	CLUSTER_NAME
 	ambari_login
 	ambari_password
 
-* [scripts/boot.sh](scripts/boot.sh) CloudInit boot script for instances, customize HDP and Ambari Agent versions.
-	
-	ambari_version
-	hdp_version	
-	hdp_utils_version
-
-* [scripts/boot_ambari.sh](scripts/boot_ambari.sh) CloudInit boot script for Ambari Utility server.  Customize HDP and Ambari versions. 
-	
-	ambari_version
-	hdp_version
-	hdp_utils_version
-
 ## Deployment
 
-Deploy using standard Terraform commands
+Deployment uses [OCI Resource Manager](https://docs.cloud.oracle.com/iaas/Content/ResourceManager/Concepts/resourcemanager.htm).  Step by step instructions can be found [here](https://blogs.oracle.com/cloud-infrastructure/deploy-hadoop-easily-on-oracle-cloud-infrastructure-using-resource-manager).
 
-	terraform init
-	terraform plan
-	terraform apply
+* Create a Stack in Resource Manager
+* Upload a [zipball](https://github.com/oracle/oci-quickstart-hortonworks/zipball/resource-manager) of this branch
+* Copy the contents of a public/private SSH keypair to the variables section
+* Alternatively modify any deployment variables (such as worker_shape)
+* Run a Plan action in Resource Manager
+* Run an Apply action in Resource Manager
 
-## Post Deployment
-
-Terraform output will show a script command to deploy the cluster using Ambari Blueprints and Ambari API calls. This is done by building JSON files for host mapping and cluster topology, and submitting them to Ambari API using curl.  The entire process is automated and will give status output as it progresses through the deployment steps.
-
-	../scripts/hdp_deploy.sh <ambari_server_ip> <availability_domain> <worker_shape> <hdfs_block_volumes_per_worker> <number_of_workers>
+Log output will show the Ambari IP address once Apply is finished.  Note that this URL will be available several minutes after the action is finished, as installation and deployment is done using CloudInit.
 
 ## Cluster Security
 
-This template also includes Kerberos Secure Cluster installation by default.   This uses a local KDC on the Utility host.   Administration of Kerberos principals can be done on this host using "kadmin.local" as root user.   Principals are in the format of "user/<host_fqdn>@HADOOP.COM".  An admin principal for use with Ambari is also setup as part of deployment, "ambari/admin@HADOOP.COM".
+This template also includes Kerberos Secure Cluster installation as an option.  Setting "deployment_type" to "secure" will enable Kerberos.  This uses a local KDC on the Utility host.   Administration of Kerberos principals can be done on this host using "kadmin.local" as root user.   Principals are in the format of "user/<host_fqdn>@HADOOP.COM".  An admin principal for use with Ambari is also setup as part of deployment, "ambari/admin@HADOOP.COM".
 
 When using secure cluster you should not over-write any of the default principals which are setup by Ambari.  For cluster administration it is suggested you set a principal for the HDFS user on the Utility host:
 
@@ -113,8 +88,6 @@ The "ambari_user" variable is the Database user for Ambari.
 
 ## Destroy Deployment
 
-To remove everything which was deployed using this template, you can use the standard terraform command:
-
-	terraform destroy
+* Run a Destroy action from Resource Manager
 
 This will prompt to ensure you wish to destroy everything, then will remove all elements of the deployment (effectively destroying all data in the process).  This is not recoverable. 
