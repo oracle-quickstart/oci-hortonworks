@@ -834,6 +834,10 @@ sleep 3
 echo -e "-> Registering HDP Repository"
 hdp_register_repo
 sleep 3
+if [ $worker_type = "BM.DenseIO2.52" ]; then 
+	# Adding 10 minute sleep to wait for BM hosts to bootstrap
+	sleep 600
+fi
 echo -e "-> Building HDP $hdp_version Cluster $CLUSTER_NAME"
 hdp_cluster_build
 sleep 3
