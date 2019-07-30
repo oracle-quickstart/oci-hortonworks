@@ -187,6 +187,12 @@ case $worker_shape in
 
 esac	
 
+# Subtract overhead from YARN NM Memory for all but VM.Standard1.8 
+if [ $worker_shape != "VM.Standard1.8" ]; then
+	yarn_nodemanager_overhead="32768"
+	yarn_nodemanager_memory=$((yarn_nodemanager_memory-yarn_nodemanager_overhead))
+fi
+
 ## Major Version Topology Mapping - Accounts for variances in topology requirements between 2.x and 3.x Clusters
 
 hdp_release=`echo $hdp_version | cut -d '.' -f 1`
@@ -461,14 +467,45 @@ cat << EOF
 				"dfs.datanode.data.dir" : "${dfs}"
     			}}
   		},
+		{ "mapred-env" : {
+			"properties" : {
+				"jobhistory_heapsize" : "8192"
+			}}
+		},
+		{ "mapred-site" : {
+			"properties" : {
+				"mapreduce.reduce.shuffle.merge.percent" : "0.66",
+				"mapreduce.job.reduce.slowstart.completedmaps" : "0.8",
+				"mapreduce.reduce.java.opts" : "-Xmx6553m",
+				"mapreduce.task.io.sort.mb" : "2047",
+				"mapreduce.map.sort.spill.percent" : "0.95",
+				"mapreduce.map.memory.mb" : "4096",
+				"mapreduce.reduce.memory.mb" : "8192",
+				"mapreduce.reduce.shuffle.parallelcopies" : "50",
+				"mapreduce.reduce.shuffle.fetch.retry.enabled" : "1",
+				"mapreduce.task.io.sort.factor" : "100",
+				"yarn.app.mapreduce.am.command-opts" : "-Xmx3276m -Dhdp.version=${hdp.version}",
+				"mapreduce.map.java.opts" : "-Xmx3276m"
+				"yarn.app.mapreduce.am.resource.mb" : "4096"
+			}}
+		},
+		{ "spark-env" : {
+			"properties" : {
+				"spark_daemon_memory" : "1024"
+			}}
+		},
 		{ "yarn-site" : {
 		        "properties" : {
 		        	"hadoop.registry.rm.enabled" : "true",
 			        "hadoop.registry.zk.quorum" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.log.server.url" : "http://%HOSTGROUP::master2%:19888/jobhistory/logs",
-				"yarn.nodemanager.resource.cpu-vcores" : "$((wprocs*2))",
+				"yarn.nodemanager.resource.cpu-vcores" : "${wprocs}",
 				"yarn.nodemanager.resource.memory-mb" : "${yarn_nodemanager_memory}",
-				"yarn.scheduler.maximum-allocation-mb" : "${yarn_nodemanager_memory}",
+				"yarn.nodemanager.vmem-check-enabled" : "false",
+				"yarn.nodemanager.resource.percentage-physical-cpu-limit" : "85",
+				"yarn.nodemanager.vmem-pmem-ratio" : "2.1",
+				"yarn.scheduler.maximum-allocation-mb" : "65536",
+				"yarn.scheduler.maximum-allocation-vcores" : "${wprocs}",
 				"yarn.resourcemanager.address" : "%HOSTGROUP::master2%:8050",
 			        "yarn.resourcemanager.zk-address" : "%HOSTGROUP::master2%:2181,%HOSTGROUP::master3%:2181,%HOSTGROUP::master1%:2181",
 			        "yarn.resourcemanager.admin.address" : "%HOSTGROUP::master2%:8141",
