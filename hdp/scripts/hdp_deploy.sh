@@ -676,7 +676,7 @@ hdp_register_cluster(){
 # Register HDP and Utils Repos
 hdp_register_repo(){
 	## Submit VDF for HDP Stack
-	echo -e "-->Submitting HDP VDF for ${hdp_version}<--" >>
+	echo -e "-->Submitting HDP VDF for ${hdp_version}<--" 
 	echo -e "-->Submitting HDP VDF for ${hdp_version}<--" >> $LOG_FILE
 	curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin https://${ambari_ip}:9443/api/v1/version_definitions -d @hdp_vdf.json >> $LOG_FILE
 	## Setup Repo using REST API
