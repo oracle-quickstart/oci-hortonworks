@@ -617,6 +617,31 @@ cat << EOF
 EOF
 }
 
+hdp_stack_version () {
+case ${hdp_version} in
+	2.5.0.3) VDF="";;
+	2.5.1.0) VDF="";;
+	2.5.5.0) VDF="";;
+	2.5.6.0) VDF="";;
+	2.5.3.0) VDF="HDP-2.5.3.0-37.xml";;
+	2.5.6.0) VDF="HDP-2.5.6.0-40.xml";;
+	2.6.1.0) VDF="HDP-2.6.1.0-129.xml";;
+	2.6.2.14) VDF="HDP-2.6.2.14-5.xml";;
+	2.6.3.0) VDF="HDP-2.6.3.0-235.xml";;
+	2.6.4.0) VDF="HDP-2.6.4.0-91.xml";;
+	2.6.5.0) VDF="HDP-2.6.5.0-292.xml";;
+	*) VDF="HDP-2.6.5.0-292.xml";;	
+esac
+cat << EOF
+    {
+    "VersionDefinition": {
+        "version_url":
+        "http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/${hdp_version}/${VDF}"
+    }
+    }
+EOF
+}
+
 # Set Utils Repo
 hdp_utils_repo(){
 cat << EOF
@@ -636,6 +661,7 @@ hdp_build_config(){
 	create_cluster_config > cluster_config.json
 	create_dynamic_hostmap > hostmap.json
 	hdp_repo > repo.json
+	hdp_stack_version > hdp_vdf.json
 	hdp_utils_repo > hdputils-repo.json
 }
 
@@ -649,6 +675,9 @@ hdp_register_cluster(){
 
 # Register HDP and Utils Repos
 hdp_register_repo(){
+	## Submit VDF for HDP Stack
+	echo -e "-->Submitting HDP VDF for ${hdp_version}<--"
+	curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin https://${ambari_ip}:9443/api/v1/version_definitions -d @hdp_vdf.json
 	## Setup Repo using REST API
 	echo -e "-->Submitting HDP and HDP Utils repo.json<--"
 	echo -e "-->Submitting HDP and HDP Utils repo.json<--" >> $LOG_FILE
