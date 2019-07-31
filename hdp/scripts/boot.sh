@@ -148,6 +148,15 @@ log "->FirewallD"
 systemctl stop firewalld
 systemctl disable firewalld
 
+master_check=`hostname | grep master`
+master_chk=`echo -e $?`
+if [ $master_chk = "0" ]; then 
+	EXECNAME="MYSQL Server"
+	log "->Install"
+	wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+	rpm -ivh mysql-community-release-el7-5.noarch.rpm
+fi
+
 EXECNAME="Ambari Agent"
 log "->Install"
 
