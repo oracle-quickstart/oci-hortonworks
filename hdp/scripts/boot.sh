@@ -398,6 +398,10 @@ if [ $is_worker = 0 ]; then
 	mkdir -p /hadoop
 	mount /dev/RAID0/hadoop /hadoop >> $LOG_FILE
 	echo "/dev/RAID0/hadoop                /hadoop              ext4    defaults,_netdev,noatime,discard,barrier=0         0 0" | tee -a /etc/fstab
+	mkdir /hadoop/tmp
+	chmod 1777 /hadoop/tmp
+	mount -B /tmp /hadoop/tmp
+	chmod 1777 /tmp
 fi
 
 EXECNAME="CLUSTER ACTIONS"
