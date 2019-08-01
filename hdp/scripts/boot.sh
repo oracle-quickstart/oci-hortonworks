@@ -392,6 +392,27 @@ if [ $is_worker = 0 ]; then
 	EXECNAME="RAID SETUP"
 	log "->Setup LVM"
 	vgcreate RAID0 /dev/oracleoci/oraclevd[b-e]1 >> $LOG_FILE
+	sleep 1
+	raid_setup="1"
+	lvcount="0"
+	while [ $raid_setup = "1" ]; do 
+		# Check to ensure all devices were added
+		pv_check=`pvs | wc -l`
+		if [ $pv_check != "5" ]; then 
+			log "--> LVM SETUP FAILURE DETECTED, RETRYING"
+			vgremove RAID0 >> $LOG_FILE
+			sleep 1
+			vgcreate RAID0 /dev/oracleoci/oraclevd[b-e]1 >> $LOG_FILE
+			sleep 1
+		else
+			raid_setup="0"
+		fi
+		lvcount=$((lvcount+1))
+		if [ $lvcount = "10" ]; then 
+			log "--> 10 CONCURRENT LVM FAILURES, EXITING LOOP.  CHECK BLOCK VOLUME ATTACHMENTS, RUN RAID SETUP MANUALLY"
+			raid_setup="0"
+		fi
+	done;
 	lvcreate -i 2 -I 64 -l 100%FREE -n hadoop RAID0 >> $LOG_FILE
 	log "->Mkfs"
 	mkfs.ext4 /dev/RAID0/hadoop >> $LOG_FILE
