@@ -22,6 +22,9 @@ When using DenseIO local storage only, set "block_volumes_per_worker" to "0" to 
 
 If higher density is required, the block volume size can be scaled up in tandem with the block volume count using the variable "data_blocksize_in_gbs".  Best practice is to scale wider on the number of block volumes per worker rather than using a small number of high capacity volumes.
 
+## Block Volumes for Logs & Cache
+This deployment also sets up a 4-volume RAID0 partition using 700GB Block Volumes mounted to Workers as /hadoop.   This facilitates a 2TB caching layer for log data and other data in transit as part of workload.    The /tmp file system is also bond mounted to this location, to provide a fast caching layer as well as prevent the OS filesystem from being consumed entirely.
+
 ## Deployment Customization
 
 Version 3.x versus 2.x deployment is controlled using the following variables:
