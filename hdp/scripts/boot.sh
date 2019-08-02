@@ -413,7 +413,7 @@ if [ $is_worker = 0 ]; then
 			raid_setup="0"
 		fi
 	done;
-	lvcreate -i 2 -I 64 -l 100%FREE -n hadoop RAID0 >> $LOG_FILE
+	lvcreate --type raid0 -l 100%FREE --stripes 4 --stripesize 64 -n hadoop RAID0 >> $LOG_FILE
 	log "->Mkfs"
 	mkfs.ext4 /dev/RAID0/hadoop >> $LOG_FILE
 	mkdir -p /hadoop
