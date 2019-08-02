@@ -252,21 +252,28 @@ while [ $dc -lt $hdfs_disks ]; do
 	if [ $data_tiering = "false" ]; then 
 		if [ $dc = 0 ]; then
 			dfs=`echo "/data${dc}/"`
+			yarn_local=`echo "/data/${dc}/hadoop/yarn/local/"`
 		elif [ $dc = $((hdfs_disks-1)) ]; then
 			dfs=`echo "$dfs,/data${dc}/"`
+			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
 		else
 		 	dfs=`echo "$dfs,/data${dc}/"`
+			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
 		fi
 		dc=$((dc+1))
 	elif [ $data_tiering = "true" ]; then 
                 if [ $dc = 0 ]; then
                         dfs=`echo "[DISK]/data${dc}/"`
+			yarn_local=`echo "/data/${dc}/hadoop/yarn/local/"`
 		elif [ $dc -lt $nvme_disks ]; then
 			dfs=`echo "$dfs,[DISK]/data${dc}/"`
+			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
                 elif [ $dc = $((hdfs_disks-1)) ]; then
                         dfs=`echo "$dfs,[ARCHIVE]/data${dc}/"`
+			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
                 else
                         dfs=`echo "$dfs,[ARCHIVE]/data${dc}/"`
+			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
                 fi
                 dc=$((dc+1))
 	fi
@@ -504,6 +511,7 @@ cat << EOF
 				"yarn.nodemanager.vmem-check-enabled" : "false",
 				"yarn.nodemanager.resource.percentage-physical-cpu-limit" : "85",
 				"yarn.nodemanager.vmem-pmem-ratio" : "2.1",
+				"yarn.nodemanager.local-dirs" : "${yarn_local}",
 				"yarn.scheduler.maximum-allocation-mb" : "65536",
 				"yarn.scheduler.maximum-allocation-vcores" : "${wprocs}",
 				"yarn.resourcemanager.address" : "%HOSTGROUP::master2%:8050",
