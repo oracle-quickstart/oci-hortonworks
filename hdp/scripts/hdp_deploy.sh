@@ -252,7 +252,7 @@ while [ $dc -lt $hdfs_disks ]; do
 	if [ $data_tiering = "false" ]; then 
 		if [ $dc = 0 ]; then
 			dfs=`echo "/data${dc}/"`
-			yarn_local=`echo "/data/${dc}/hadoop/yarn/local/"`
+			yarn_local=`echo "/data${dc}/hadoop/yarn/local/"`
 		elif [ $dc = $((hdfs_disks-1)) ]; then
 			dfs=`echo "$dfs,/data${dc}/"`
 			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
@@ -264,7 +264,7 @@ while [ $dc -lt $hdfs_disks ]; do
 	elif [ $data_tiering = "true" ]; then 
                 if [ $dc = 0 ]; then
                         dfs=`echo "[DISK]/data${dc}/"`
-			yarn_local=`echo "/data/${dc}/hadoop/yarn/local/"`
+			yarn_local=`echo "/data${dc}/hadoop/yarn/local/"`
 		elif [ $dc -lt $nvme_disks ]; then
 			dfs=`echo "$dfs,[DISK]/data${dc}/"`
 			yarn_local=`echo "$yarn_local,/data${dc}/hadoop/yarn/local/"`
