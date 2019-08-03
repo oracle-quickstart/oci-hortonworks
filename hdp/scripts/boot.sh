@@ -32,6 +32,9 @@ log "->Start"
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
 
+# Make resolv.conf immutable
+chattr +i /etc/resolv.conf
+
 EXECNAME="JAVA"
 log "->INSTALL"
 ## Install Java & Kerberos client
