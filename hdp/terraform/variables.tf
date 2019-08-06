@@ -81,18 +81,21 @@ variable "availability_domain" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
-// Oracle-provided image "Oracle-Linux-7.6-2019.05.28-0"
-// Kernel Version: 4.14.35-1844.5.3
+// Oracle-provided image "Oracle-Linux-7.6-2019.07.15-0"
+// Kernel Version: kernel-uek-4.14.35-1902.3.1.el7uek.x86_64
 variable "InstanceImageOCID" {
   type = "map"
   default = {
-    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaa6mmih5n72yviujadzfkzthjwyc3h5uvaeejc3kpalhyakk6tfejq"
-    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaayxjigcwqiqjncbkm7yxppjqfzsjnbvtjsemrvnwrtpwynausossa"
-    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaabmpm76byqi5nisxblvh4gtfvfxbnyo4vmoqfvpldggellgrv4eiq"
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaijslwo4cd3xhcledgwglqwjem3te4q3szekfm37hoo3wf2tm6u5a"
-    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaa66i5ug2lc6ywq6j2y4e535vgzsgb7pwn6blv2bw5a2wb2gbo5wfa"
-    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaaj6pcmnh6y3hdi3ibyxhhflvp3mj2qad4nspojrnxc6pzgn2w3k5q"
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaa2wadtmv6j6zboncfobau7fracahvweue6dqipmcd5yj6s54f3wpq"
+    ap-mumbai-1 = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa74noijy4xbexah6elqtagiz2sr5rrmhp3iwph5c2esyauahgwk2q"
+    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaavntl5tdffjuhbuugj73cnwwd5z5obel4ivtxgeaicfofamjelh7q"
+    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaann6woj2cm3hguypjfx3ubv6lnwlk3x36kz775p273nvflgwy5fqq"
+    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaat5xofe3k4wj55yikzpz33xcz6td5h7kb5x3vch555qt54ok3anva"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaakuepu6owftdo3qq2rftcoiwdhyj5jjxfdws6gxnv5gpdxpvtjnrq"
+    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaavrftjg3fa2uw5ndqin3tjme3jc4vpxnsysoxetlswsr6aqlfwurq"
+    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaa5m7pxvywx2isnwon3o3kixkk6gq4tmdtfgvctj7xbl3wgo56uppa"
+    us-langley-1 = "ocid1.image.oc2.us-langley-1.aaaaaaaa6mdubne7lvp75ttl32zyjurarnp6u3qazfj3nleinwd4xfryaomq"
+    us-luke-1 = "ocid1.image.oc2.us-luke-1.aaaaaaaaunosincqm2bctskhewtkvqjy3awunwwm7mdcelitps2t33mdneva"
+    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaajpign274mukkdwjqbzqanem4xqcmvu4mip3jbf5kzhrplqjwdkfq"
   }
 }
 
