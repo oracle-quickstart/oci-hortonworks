@@ -35,6 +35,16 @@ setenforce 0
 # Make resolv.conf immutable
 chattr +i /etc/resolv.conf
 
+log "-> Install NTP"
+yum install ntp -y >> $LOG_FILE
+ntpdate 169.254.169.254 >> $LOG_FILE
+sed -i 's/^server/#server/g' /etc/ntp.conf
+echo "server 169.254.169.254 iburst" >> /etc/ntp.conf
+systemctl start ntpd >> $LOG_FILE
+systemctl enable ntpd
+systemctl stop chronyd
+systemctl disable chronyd
+
 EXECNAME="JAVA"
 log "->INSTALL"
 ## Install Java & Kerberos client

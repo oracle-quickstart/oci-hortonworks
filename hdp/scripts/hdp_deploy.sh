@@ -491,6 +491,11 @@ cat << EOF
 				"mapreduce.reduce.shuffle.parallelcopies" : "50",
 				"mapreduce.reduce.shuffle.fetch.retry.enabled" : "1",
 				"mapreduce.task.io.sort.factor" : "100",
+				"mapreduce.task.timeout" : "60000",
+				"mapreduce.reduce.shuffle.fetch.retry.timeout-ms" : "60000",
+				"mapreduce.reduce.shuffle.connect.timeout" : "180000",
+				"mapreduce.reduce.shuffle.read.timeout" : "180000",
+				"mapreduce.shuffle.connection-keep-alive.timeout" : "5",
 				"yarn.app.mapreduce.am.command-opts" : "-Xmx3276m",
 				"mapreduce.map.java.opts" : "-Xmx3276m",
 				"yarn.app.mapreduce.am.resource.mb" : "4096"
