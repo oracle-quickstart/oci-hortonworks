@@ -44,6 +44,8 @@ systemctl start ntpd >> $LOG_FILE
 systemctl enable ntpd
 systemctl stop chronyd
 systemctl disable chronyd
+yum remove chrony -y
+timedatectl set-ntp true
 
 EXECNAME="JAVA"
 log "->INSTALL"
