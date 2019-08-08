@@ -43,7 +43,6 @@ resource "oci_core_volume" "MasterNNVolume" {
 resource "oci_core_volume_attachment" "MasterNNAttachment" {
   count           = "${var.instances}"
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Master.*.id[count.index]}"
   volume_id       = "${oci_core_volume.MasterNNVolume.*.id[count.index]}"
   device          = "/dev/oracleoci/oraclevdb"

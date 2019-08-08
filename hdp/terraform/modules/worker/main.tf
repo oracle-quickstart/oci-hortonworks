@@ -43,7 +43,6 @@ resource "oci_core_volume" "WorkerRAIDVolume1" {
 resource "oci_core_volume_attachment" "WorkerRAIDAttachment1" {
   count           = "${var.instances}"
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
   volume_id       = "${oci_core_volume.WorkerRAIDVolume1.*.id[count.index]}"
   device = "/dev/oracleoci/oraclevdb"
@@ -60,7 +59,6 @@ resource "oci_core_volume" "WorkerRAIDVolume2" {
 resource "oci_core_volume_attachment" "WorkerRAIDAttachment2" {
   count           = "${var.instances}"
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
   volume_id       = "${oci_core_volume.WorkerRAIDVolume2.*.id[count.index]}"
   device = "/dev/oracleoci/oraclevdc"
@@ -77,7 +75,6 @@ resource "oci_core_volume" "WorkerRAIDVolume3" {
 resource "oci_core_volume_attachment" "WorkerRAIDAttachment3" {
   count           = "${var.instances}"
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
   volume_id       = "${oci_core_volume.WorkerRAIDVolume3.*.id[count.index]}"
   device = "/dev/oracleoci/oraclevdd"
@@ -94,7 +91,6 @@ resource "oci_core_volume" "WorkerRAIDVolume4" {
 resource "oci_core_volume_attachment" "WorkerRAIDAttachment4" {
   count           = "${var.instances}"
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index]}"
   volume_id       = "${oci_core_volume.WorkerRAIDVolume4.*.id[count.index]}"
   device = "/dev/oracleoci/oraclevde"
@@ -112,7 +108,6 @@ resource "oci_core_volume" "WorkerDataVolume" {
 resource "oci_core_volume_attachment" "WorkerDataAttachment" {
   count               = "${(var.instances * var.block_volumes_per_worker)}"  
   attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.Worker.*.id[count.index/var.block_volumes_per_worker]}"
   volume_id       = "${oci_core_volume.WorkerDataVolume.*.id[count.index]}"
   device = "${var.data_volume_attachment_device[count.index%(var.block_volumes_per_worker)]}"
