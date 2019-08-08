@@ -35,6 +35,7 @@ ambari_password="somepassword"
 utilfqdn="hw-utility-1.public${ad}.hwvcn.oraclevcn.com"
 master1fqdn="hw-master-1.private${ad}.hwvcn.oraclevcn.com"
 master2fqdn="hw-master-2.private${ad}.hwvcn.oraclevcn.com"
+master3fqdn="hw-master-3.private${ad}.hwvcn.oraclevcn.com"
 bastionfqdn="hw-bastion.bastion${ad}.hwvcn.oraclevcn.com"
 
 # End Global Variables
@@ -288,13 +289,16 @@ cat << EOF
         "default_password": "hadoop",
         "host_groups": [{
             "name": "master3",
-            "hosts": [{ "fqdn": "${utilfqdn}" }]
+            "hosts": [{ "fqdn": "${master3fqdn}" }]
         }, {
             "name": "master1",
             "hosts": [{ "fqdn": "${master1fqdn}" }]
         }, {
             "name": "master2",
             "hosts": [{ "fqdn": "${master2fqdn}" }]
+        }, {
+	    "name": "utility",
+            "hosts": [{ "fqdn": "${utilfqdn}" }]
         }, {
             "name": "datanode",
             "host_count": "${wc}",
@@ -545,16 +549,23 @@ cat << EOF
 				}}
 		}],
 		"host_groups": [
-                        {"name": "master3",
+                        {"name": "utility",
+                        "components": [
+			        { "name": "METRICS_COLLECTOR" },
+                                { "name": "HDFS_CLIENT" },
+                                { "name": "YARN_CLIENT" },
+                                { "name": "MAPREDUCE2_CLIENT" }
+                        "cardinality": 1 },
+			{"name": "master3",
                         "components": [
                                 { "name": "ZOOKEEPER_SERVER" },
-			        { "name": "METRICS_COLLECTOR" },
-			        { "name": "METRICS_MONITOR" },
+                                { "name": "METRICS_COLLECTOR" },
+                                { "name": "METRICS_MONITOR" },
                                 { "name": "HDFS_CLIENT" },
                                 { "name": "YARN_CLIENT" },
                                 { "name": "MAPREDUCE2_CLIENT" },
                                 { "name": "ZOOKEEPER_CLIENT" },
-				${master3_opts}
+                                ${master3_opts}
                         "cardinality": 1 },
                         {"name": "bastion",
                         "components": [

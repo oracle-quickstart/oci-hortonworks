@@ -40,7 +40,7 @@ variable "data_blocksize_in_gbs" {
 }
 
 variable "block_volumes_per_worker" {
-   default = "3"
+   default = "0"
 }
 
 variable "master_instance_shape" {
@@ -48,7 +48,7 @@ variable "master_instance_shape" {
 }
 
 variable "master_node_count" {
-  default = "2"
+  default = "3"
 }
 
 variable "nn_volume_size_in_gbs" {
@@ -60,7 +60,7 @@ variable "bastion_instance_shape" {
 }
 
 variable "utility_instance_shape" {
-  default = "VM.Standard2.16"
+  default = "VM.Standard2.8"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
