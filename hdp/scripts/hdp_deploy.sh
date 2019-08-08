@@ -554,7 +554,7 @@ cat << EOF
 			        { "name": "METRICS_COLLECTOR" },
                                 { "name": "HDFS_CLIENT" },
                                 { "name": "YARN_CLIENT" },
-                                { "name": "MAPREDUCE2_CLIENT" }
+                                { "name": "MAPREDUCE2_CLIENT" }],
                         "cardinality": 1 },
 			{"name": "master3",
                         "components": [
