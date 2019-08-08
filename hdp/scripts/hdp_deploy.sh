@@ -551,7 +551,7 @@ cat << EOF
 		"host_groups": [
                         {"name": "utility",
                         "components": [
-			        { "name": "METRICS_COLLECTOR" },
+			        { "name": "METRICS_MONITOR" },
                                 { "name": "HDFS_CLIENT" },
                                 { "name": "YARN_CLIENT" },
                                 { "name": "MAPREDUCE2_CLIENT" }],
