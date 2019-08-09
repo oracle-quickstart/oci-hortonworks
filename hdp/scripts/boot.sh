@@ -28,6 +28,16 @@ log "->Start"
 # HOST TUNINGS
 # 
 
+# Add /etc/hosts entries
+wct=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_node_count`
+AD=`curl -L http://169.254.169.254/opc/v1/instance/metadata/AD`
+for w in `seq 1 ${wct}`; do 
+	host hw-worker-${w}.private${AD}.hwvcn.oraclevcn.com | gawk '{print $4" "$1}' >> /etc/hosts
+done;
+for m in `seq 1 3`; do 
+	host hw-master-${m}.private${AD}.hwvcn.oraclevcn.com | gawk '{print $4" "$1}' >> /etc/hosts
+done;
+
 # Disable SELinux
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0

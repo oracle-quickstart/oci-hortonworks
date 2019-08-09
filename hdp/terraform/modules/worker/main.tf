@@ -22,6 +22,8 @@ resource "oci_core_instance" "Worker" {
     hdp_utils_version   = "${var.hdp_utils_version}"
     deployment_type     = "${var.deployment_type}"
     cluster_name        = "${var.cluster_name}"
+    AD                  = "${var.AD}"
+    worker_node_count   = "${var.worker_node_count}"
   }
 
   timeouts {

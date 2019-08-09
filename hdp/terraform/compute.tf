@@ -16,6 +16,8 @@ module "bastion" {
         hdp_utils_version = "${var.hdp_utils_version}"
 	deployment_type = "${var.deployment_type}"
         cluster_name = "${var.cluster_name}"
+        AD = "${var.availability_domain}"
+	worker_node_count = "${var.worker_node_count}"
 }
 
 module "utility" {
@@ -63,6 +65,8 @@ module "master" {
         hdp_utils_version = "${var.hdp_utils_version}"
 	deployment_type = "${var.deployment_type}"
         cluster_name = "${var.cluster_name}"
+        AD = "${var.availability_domain}"
+	worker_node_count = "${var.worker_node_count}"
 }
 
 module "worker" {
@@ -85,4 +89,6 @@ module "worker" {
         hdp_utils_version = "${var.hdp_utils_version}"
 	deployment_type = "${var.deployment_type}"
         cluster_name = "${var.cluster_name}"
+        AD = "${var.availability_domain}"
+	worker_node_count = "${var.worker_node_count}"
 }

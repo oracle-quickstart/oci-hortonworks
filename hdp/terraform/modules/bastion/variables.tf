@@ -18,6 +18,8 @@ variable "hdp_utils_version" {}
 variable "deployment_type" {}
 variable "cluster_name" {}
 variable "image_ocid" {}
+variable "AD" {}
+variable "worker_node_count" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
