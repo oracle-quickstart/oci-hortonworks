@@ -547,6 +547,14 @@ cat << EOF
 			        "yarn.timeline-service.webapp.address" : "%HOSTGROUP::master2%:8188",
 			        "yarn.timeline-service.webapp.https.address" : "%HOSTGROUP::master2%:8190"
 				}}
+		},
+                { "yarn-env" : {
+                        "properties" : {
+				"yarn_heapsize" : "4096",
+			        "nodemanager_heapsize" : "4096",
+				"resourcemanager_heapsize" : "4096",
+				"apptimelineserver_heapsize" : "4096"
+				}}
 		}],
 		"host_groups": [
                         {"name": "utility",
