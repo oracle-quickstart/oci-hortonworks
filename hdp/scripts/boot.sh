@@ -28,20 +28,27 @@ log "->Start"
 # HOST TUNINGS
 # 
 
-# Add /etc/hosts entries
-wct=`curl -L http://169.254.169.254/opc/v1/instance/metadata/worker_node_count`
-AD=`curl -L http://169.254.169.254/opc/v1/instance/metadata/AD`
-for w in `seq 1 ${wct}`; do 
-	host hw-worker-${w}.private${AD}.hwvcn.oraclevcn.com | gawk '{print $4" "$1}' >> /etc/hosts
-done;
-for m in `seq 1 3`; do 
-	host hw-master-${m}.private${AD}.hwvcn.oraclevcn.com | gawk '{print $4" "$1}' >> /etc/hosts
-done;
-
 # Disable SELinux
 sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
 
+log "-> Install & Configure Unbound"
+# Install Unbound DNS for Caching
+yum install unbound -y
+
+# Configuration
+cat <<EOF >> /etc/unbound/unbound.conf
+forward-zone:
+   name: "."
+   forward-addr: 169.254.169.254@53#dns.oci 
+EOF
+
+log "--> Start Unbound"
+systemctl start unbound
+systemctl enable unbound
+
+# Change Resolv.conf to use Unbound
+sed -i 's/169.254.169.254/127.0.0.1/g' /etc/resolv.conf
 # Make resolv.conf immutable
 chattr +i /etc/resolv.conf
 
