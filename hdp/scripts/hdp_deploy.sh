@@ -904,6 +904,7 @@ echo -e "-> Creating new Admin account: ${ambari_login}" >> $LOG_FILE
 new_admin > ${ambari_login}.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f new_admin.json
+check_ambari_requests
 echo -e "--> Deployment Type: $deployment_type" >> $LOG_FILE
 if [ $deployment_type = "simple" ]; then 
 	echo -e "---> Simple Deployment Detected, Starting cluster services" >> $LOG_FILE
@@ -918,6 +919,7 @@ admin_password=`create_random_password`
 admin_password_json > admin.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f admin.json
+check_ambari_requests
 end_time=`date +%Y-%m%d-%H:%M:%S`
 end_time_s=`date +%H:%M:%S` 
 echo -e "\t--CLUSTER SETUP COMPLETE--" >> $LOG_FILE
