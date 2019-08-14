@@ -846,11 +846,11 @@ enable_kerberos(){
 	echo -e "-->Installing KERBEROS Cluster Service and Components"
 	echo -e "-->Installing KERBEROS Cluster Service and Components" >> $LOG_FILE
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Install Kerberos Cluster Service"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services/KERBEROS >> $LOG_FILE
-	check_ambari_requests
+	check_ambari_requests >> $LOG_FILE
 	echo -e "-->Stopping all Cluster services"
 	echo -e "-->Stopping all Cluster services" >> $LOG_FILE
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Stop Cluster Services"}, "Body": {"ServiceInfo": {"state" : "INSTALLED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services >> $LOG_FILE
-	check_ambari_requests
+	check_ambari_requests >> $LOG_FILE
 	echo -e "-->Uploading Kerberos Credentials"
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X POST -d '{ "Credential" : {" principal" : "ambari/admin@HADOOP.COM", "key" : "somepassword", "type" : "temporary"}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/credentials/kdc.admin.credential
 	sleep 1
@@ -858,11 +858,11 @@ enable_kerberos(){
 	echo -e "-->Enabling Kerberos" >> $LOG_FILE
 	build_kdc_payload > payload.json
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d @payload.json https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME >> $LOG_FILE
-	check_ambari_requests
+	check_ambari_requests >> $LOG_FILE
 	echo -e "->Starting Cluster Services"
 	echo -e "->Starting Cluster Services" >> $LOG_FILE
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
-	check_ambari_requests
+	check_ambari_requests >> $LOG_FILE
 }
 
 ##
@@ -904,7 +904,7 @@ echo -e "-> Creating new Admin account: ${ambari_login}" >> $LOG_FILE
 new_admin > ${ambari_login}.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f new_admin.json
-check_ambari_requests
+check_ambari_requests >> $LOG_FILE
 echo -e "--> Deployment Type: $deployment_type" >> $LOG_FILE
 if [ $deployment_type = "simple" ]; then 
 	echo -e "---> Simple Deployment Detected, Starting cluster services" >> $LOG_FILE
@@ -919,7 +919,7 @@ admin_password=`create_random_password`
 admin_password_json > admin.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f admin.json
-check_ambari_requests
+check_ambari_requests >> $LOG_FILE
 end_time=`date +%Y-%m%d-%H:%M:%S`
 end_time_s=`date +%H:%M:%S` 
 echo -e "\t--CLUSTER SETUP COMPLETE--" >> $LOG_FILE
