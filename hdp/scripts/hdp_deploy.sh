@@ -904,12 +904,12 @@ echo -e "-> Creating new Admin account: ${ambari_login}" >> $LOG_FILE
 new_admin > ${ambari_login}.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f new_admin.json
-sleep 3
-check_ambari_requests
+echo -e "--> Deployment Type: $deployment_type" >> $LOG_FILE
 if [ $deployment_type = "simple" ]; then 
-	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
-        check_ambari_requests
+	echo -e "---> Simple Deployment Detected, Starting cluster services" >> $LOG_FILE
+	curl -i -s -k -H "X-Requested-By:ambari" -u admin:admin -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
 else
+	echo -e "---> Kerberos Setup Starting" >> $LOG_FILE
 	enable_kerberos
 fi
 # reset default  admin account to random password
