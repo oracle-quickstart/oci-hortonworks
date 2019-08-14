@@ -488,7 +488,7 @@ elif [ $cluster_check -gt 20 ]; then
 		sleep 1
 	done;
 	 for component in `echo ${host_component[*]}`; do
-                curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"HostRoles": {"state": "INSTALLED"}}' https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}/host_components/${component}
+                curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Enable host component"}, "Body": {"HostRoles": {"state": "INSTALLED"}}}' https://${utilfqdn}:9443/api/v1/clusters/${CLUSTER_NAME}/hosts/${hostfqdn}/host_components/${component}
                 sleep 1
         done;
 else

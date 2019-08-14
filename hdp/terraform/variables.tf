@@ -81,21 +81,22 @@ variable "availability_domain" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
-// Oracle-provided image "Oracle-Linux-7.6-2019.07.15-0"
-// Kernel Version: kernel-uek-4.14.35-1902.3.1.el7uek.x86_64
+// Oracle-provided image "Oracle-Linux-7.6-2019.08.02-0"
+// Kernel Version: kernel-uek-4.14.35-1902.3.2.el7uek.x86_64
 variable "InstanceImageOCID" {
   type = "map"
   default = {
-    ap-mumbai-1 = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa74noijy4xbexah6elqtagiz2sr5rrmhp3iwph5c2esyauahgwk2q"
-    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaavntl5tdffjuhbuugj73cnwwd5z5obel4ivtxgeaicfofamjelh7q"
-    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaann6woj2cm3hguypjfx3ubv6lnwlk3x36kz775p273nvflgwy5fqq"
-    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaat5xofe3k4wj55yikzpz33xcz6td5h7kb5x3vch555qt54ok3anva"
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaakuepu6owftdo3qq2rftcoiwdhyj5jjxfdws6gxnv5gpdxpvtjnrq"
-    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaavrftjg3fa2uw5ndqin3tjme3jc4vpxnsysoxetlswsr6aqlfwurq"
-    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaa5m7pxvywx2isnwon3o3kixkk6gq4tmdtfgvctj7xbl3wgo56uppa"
-    us-langley-1 = "ocid1.image.oc2.us-langley-1.aaaaaaaa6mdubne7lvp75ttl32zyjurarnp6u3qazfj3nleinwd4xfryaomq"
-    us-luke-1 = "ocid1.image.oc2.us-luke-1.aaaaaaaaunosincqm2bctskhewtkvqjy3awunwwm7mdcelitps2t33mdneva"
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaajpign274mukkdwjqbzqanem4xqcmvu4mip3jbf5kzhrplqjwdkfq"
+    ap-mumbai-1 = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaajc74fbcjvb6fm55ij6pfi6fgp6t4r4axfwbh3hkb6fjwpvt64xta"
+    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaacdrxj4ktv6qilozzc7bkhcrdlzri2gw4imlljpg255stxvkbgpnq"
+    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaasd7bfo4bykdf3jlb7n5j46oeqxwj2r3ub4ly36db3pmrlmlzzv3a"
+    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaa3i4wzxnwlfgizjv4usrz2fh7dhgolp5dmrmmqcm4i7bdhkbdracq"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaax3xjmpwufw6tucuoyuenletg74sdsj5f2gzsvlv4mqbbgeokqzsq"
+    eu-zurich-1 = "ocid1.image.oc1.eu-zurich-1.aaaaaaaa5cd4xnyw6udl5u7v7acgpc4a3xpkwirk7xg2oliq53ea2gmrqheq"
+    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaaokbcnsqwbrgz2wiif2s452u2a4o674tnjsamja5rhtpml5a7sana"
+    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaasorq3smbazoxvyqozz52ch5i5cexjojb7qvcefa5ubij2yjycy2a"
+    us-langley-1 = "ocid1.image.oc2.us-langley-1.aaaaaaaad225yfhwxrkt4aprxf6erfhtiubrrq3ythktnuv4vu5lzgqowgsa"
+    us-luke-1 = "ocid1.image.oc2.us-luke-1.aaaaaaaat37ujafbrdcdfirlfhwzsozyp4lnvzbv2ubiy2p6ob6q3lekpgjq"
+    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaaa3vjdblyvw6rlz3jhjxudf6dpqsazqfynn3ziqrxyfox2wq5bdaq"
   }
 }
 
