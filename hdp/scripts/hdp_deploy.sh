@@ -905,12 +905,6 @@ new_admin > ${ambari_login}.json
 curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @${ambari_login}.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
 rm -f new_admin.json
 sleep 3
-# reset default  admin account to random password
-echo -e "-> Reset default admin account to random password" >> $LOG_FILE
-admin_password=`create_random_password`
-admin_password_json > admin.json
-curl -i -s -k -H "X-Requested-By: ambari" -X PUT -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
-rm -f admin.json
 check_ambari_requests
 if [ $deployment_type = "simple" ]; then 
 	curl -i -s -k -H "X-Requested-By:ambari" -u ${ambari_login}:${ambari_password} -i -X PUT -d '{"RequestInfo": {"context" :"Start Cluster Services"}, "Body": {"ServiceInfo": {"state" : "STARTED"}}}' https://${ambari_ip}:9443/api/v1/clusters/$CLUSTER_NAME/services>> $LOG_FILE
@@ -918,6 +912,12 @@ if [ $deployment_type = "simple" ]; then
 else
 	enable_kerberos
 fi
+# reset default  admin account to random password
+echo -e "-> Reset default admin account to random password" >> $LOG_FILE
+admin_password=`create_random_password`
+admin_password_json > admin.json
+curl -i -s -k -H "X-Requested-By: ambari" -X POST -u admin:admin -d @admin.json https://${ambari_ip}:9443/api/v1/users >> $LOG_FILE
+rm -f admin.json
 end_time=`date +%Y-%m%d-%H:%M:%S`
 end_time_s=`date +%H:%M:%S` 
 echo -e "\t--CLUSTER SETUP COMPLETE--" >> $LOG_FILE
