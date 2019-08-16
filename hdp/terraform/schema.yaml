@@ -5,9 +5,9 @@ locale: "en"
 groupings:
 - title: "Global Options"
   variables:
-    - ${ssh_public_key}
-    - ${ssh_private_key}
-    - ${availability_domain}
+  - ${ssh_public_key}
+  - ${ssh_private_key}
+  - ${availability_domain}
 - title: "HDP Options"
   variables:
   - ${ambari_version}
@@ -22,7 +22,7 @@ groupings:
   - ${block_volumes_per_worker}
 - title: "HDFS Block Volume Size"
   variables:
-    - ${data_blocksize_in_gbs}
+  - ${data_blocksize_in_gbs}
   visible:
     not :
       - eq:
@@ -42,28 +42,28 @@ groupings:
 
 - title: "Pre-Defined"
   variables:
-    - ${region}
-    - ${compartment_ocid}
-    - ${tenancy_ocid}
-    - ${InstanceImageOCID}
-    - ${oci_service_gateway}
+  - ${region}
+  - ${compartment_ocid}
+  - ${tenancy_ocid}
+  - ${InstanceImageOCID}
+  - ${oci_service_gateway}
   visible: false
 
 variables:
   ambari_version:
     type: enum
     enum:
-      - "2.7.3"
-      - "2.7.1"
-      - "2.7.0"
-      - "2.6.2.2"
-      - "2.6.2"
-      - "2.6.1.5"
-      - "2.6.1"
-      - "2.6.0"
-      - "2.5.2"
-      - "2.5.1"
-      - "2.5.0.3"
+    - "2.7.3"
+    - "2.7.1"
+    - "2.7.0"
+    - "2.6.2.2"
+    - "2.6.2"
+    - "2.6.1.5"
+    - "2.6.1"
+    - "2.6.0"
+    - "2.5.2"
+    - "2.5.1"
+    - "2.5.0.3"
     title: "Ambari Version"
     description: "Choose the version of Ambari to deploy"
     required: true
@@ -71,19 +71,19 @@ variables:
   hdp_version:
     type: enum
     enum:
-      - "3.1.0.0"
-      - "3.0.1.0"
-      - "3.0.0.0"
-      - "2.6.5.0"
-      - "2.6.4.0"
-      - "2.6.3.0"
-      - "2.6.2.0"
-      - "2.6.1.0"
-      - "2.6.0.0"
-      - "2.5.6.0"
-      - "2.5.5.0"
-      - "2.5.3.0"
-      - "2.5.0.0"
+    - "3.1.0.0"
+    - "3.0.1.0"
+    - "3.0.0.0"
+    - "2.6.5.0"
+    - "2.6.4.0"
+    - "2.6.3.0"
+    - "2.6.2.0"
+    - "2.6.1.0"
+    - "2.6.0.0"
+    - "2.5.6.0"
+    - "2.5.5.0"
+    - "2.5.3.0"
+    - "2.5.0.0"
     title: "HDP Version"
     description: "Choose the version of HDP to deploy"
     required: true
@@ -91,9 +91,9 @@ variables:
   hdp_utils_version:
     type: enum
     enum:
-      - "1.1.0.22"
-      - "1.1.0.21"
-      - "1.1.0.20"
+    - "1.1.0.22"
+    - "1.1.0.21"
+    - "1.1.0.20"
     title: "HDP Utils Version"
     description: "Choose the HDP Utils version to deploy"
     required: true
@@ -228,4 +228,3 @@ variables:
     minimum: 500
     maximum: 32768
     required: true
-
