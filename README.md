@@ -1,13 +1,10 @@
 # oci-hortonworks
 These are Terraform modules that deploy [Hortonworks](https://hortonworks.com/products/) on [Oracle Cloud Infrastructure (OCI)](https://cloud.oracle.com/en_US/cloud-infrastructure).  They are developed jointly by Oracle and Cloudera.
-=======
-# Hortonworks Data Platform 
-This is a Terraform template for deploying a fully configured HDP cluster on OCI.
 
-|             | Worker Nodes   | Bastion Instance | Utility and Master Instances |
-|-------------|----------------|------------------|------------------------------|
+|                       | Worker Nodes   | Bastion Instance | Utility and Master Instances |
+|-----------------------|----------------|------------------|------------------------------|
 | Recommended (Default) | BM.DenseIO2.52 | VM.Standard2.4   | VM.Standard2.16              |
-| Minimum     | VM.Standard2.8 | VM.Standard2.1   | VM.Standard2.8               |
+| Minimum               | VM.Standard2.8 | VM.Standard2.1   | VM.Standard2.8               |
 
 Host types can be customized in this template.   Also included with this template is an easy method to customize block volume quantity and size as pertains to HDFS capacity.   See "variables.tf" for more information in-line.
 
