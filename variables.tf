@@ -81,34 +81,42 @@ variable "availability_domain" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
-// Oracle-provided image "Oracle-Linux-7.6-2019.07.15-0"
-// Kernel Version: kernel-uek-4.14.35-1902.3.1.el7uek.x86_64
+// Oracle-provided image "Oracle-Linux-7.6-2019.12.18-0"
+// Kernel Version: kernel-uek-4.14.35-1902.8.4
 variable "InstanceImageOCID" {
   type = "map"
   default = {
-    ap-mumbai-1 = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa74noijy4xbexah6elqtagiz2sr5rrmhp3iwph5c2esyauahgwk2q"
-    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaavntl5tdffjuhbuugj73cnwwd5z5obel4ivtxgeaicfofamjelh7q"
-    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaann6woj2cm3hguypjfx3ubv6lnwlk3x36kz775p273nvflgwy5fqq"
-    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaat5xofe3k4wj55yikzpz33xcz6td5h7kb5x3vch555qt54ok3anva"
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaakuepu6owftdo3qq2rftcoiwdhyj5jjxfdws6gxnv5gpdxpvtjnrq"
-    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaavrftjg3fa2uw5ndqin3tjme3jc4vpxnsysoxetlswsr6aqlfwurq"
-    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaa5m7pxvywx2isnwon3o3kixkk6gq4tmdtfgvctj7xbl3wgo56uppa"
-    us-langley-1 = "ocid1.image.oc2.us-langley-1.aaaaaaaa6mdubne7lvp75ttl32zyjurarnp6u3qazfj3nleinwd4xfryaomq"
-    us-luke-1 = "ocid1.image.oc2.us-luke-1.aaaaaaaaunosincqm2bctskhewtkvqjy3awunwwm7mdcelitps2t33mdneva"
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaajpign274mukkdwjqbzqanem4xqcmvu4mip3jbf5kzhrplqjwdkfq"
+    ap-mumbai-1 = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaaka7f3qhfuobx2s7dqfgbcx5klllh5xlflbgzb5pymqsnuphehk2a"
+    ap-seoul-1 = "ocid1.image.oc1.ap-seoul-1.aaaaaaaaw52bcejclqwpqchgfx7fhuj4f4smruqxdywwn3uy2xhmhh6bzpza"
+    ap-sydney-1 = "ocid1.image.oc1.ap-sydney-1.aaaaaaaazy24niulp5e5a5oyaadjrwnwoa2g6f2hay2f26dqy63pn5sljjma"
+    ap-tokyo-1 = "ocid1.image.oc1.ap-tokyo-1.aaaaaaaarl7op6ken6hpevfwuevfnt6ic3tlhitu7pct2py5uxdzyvqb5mkq"
+    ca-toronto-1 = "ocid1.image.oc1.ca-toronto-1.aaaaaaaa6wg3hkw7qxwgysuv5c3fuhtyau5cps4ktmjgxvdtxk6ajtf23fcq"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaalljvzqt3aw7cwpls3oqx7dyrcuntqfj6xn3a2ul3jiuby27lqdxa"
+    eu-zurich-1 = "ocid1.image.oc1.eu-zurich-1.aaaaaaaaf2fwfgbpxz2g3boettl3q6tow7efs34v2t2t5r45yuydvkqm32ha"
+    sa-saopaulo-1 = "ocid1.image.oc1.sa-saopaulo-1.aaaaaaaatwrc37cesjtgx3gm4vzq6ocpedgzxjystewc2a7stnv2ydcoiquq"
+    uk-london-1 = "ocid1.image.oc1.uk-london-1.aaaaaaaagwdcgcw4squjusjy4yoyzxlewn6omj75f2xur2qpo7dgwexnzyhq"
+    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaaxrcvnpfxfsyzv3ytuu6swalnbmocneej6yj4nr4vbcoufgmfpwqq"
+    us-langley-1 = "ocid1.image.oc2.us-langley-1.aaaaaaaa4uyl37ircuup36ju2l4edrzzjexzvtmzay4yh6bhhgixeojxwo7a"
   }
 }
 
 variable "oci_service_gateway" {
   type = "map"
   default = {
-    ap-seoul-1 = "all-seo-services-in-oracle-services-network"
-    ap-tokyo-1 = "all-hnd-services-in-oracle-services-network"
+    ap-mumbai-1 = "all-bom-services-in-oracle-services-network"
+    ap-seoul-1 = "all-icn-services-in-oracle-services-network"
+    ap-sydney-1 = "all-syd-services-in-oracle-services-network"
+    ap-tokyo-1 = "all-nrt-services-in-oracle-serviecs-network"
     ca-toronto-1 = "all-yyz-services-in-oracle-services-network"
     eu-frankfurt-1 = "all-fra-services-in-oracle-services-network"
+    eu-zurich-1 = "all-zrh-services-in-oracle-services-network"
+    sa-saopaulo-1 = "all-gru-services-in-oracle-services-network"
     uk-london-1 = "all-lhr-services-in-oracle-services-network"
     us-ashburn-1 = "all-iad-services-in-oracle-services-network"
+    us-langley-1 = "all-lfi-services-in-oracle-services-network"
+    us-luke-1 = "all-luf-services-in-oracle-services-network"
     us-phoenix-1 = "all-phx-services-in-oracle-services-network"
   }
 }
+
 
